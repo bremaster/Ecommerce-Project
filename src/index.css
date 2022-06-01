@@ -1,0 +1,90 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/*******************video animation*******************/
+/* The animation code */
+@keyframes video {
+  0%   {left: 50%; top:50%;}
+  100% {left:50%; top:53%;}
+}
+
+/* The element to apply the animation to */
+.video-animation {
+  animation-name: video;
+  animation-duration: 3s;
+}
+
+/*******************letter animation*******************/
+/* The animation code */
+@keyframes letter {
+  0%   {left: 50%; top:0%; opacity: 0; width: 501px;}
+  100% {left:50%; top:40%; opacity: 1; width: 601px;}
+}
+
+/* The element to apply the animation to */
+.letter__animation {
+  animation-name: letter;
+  animation-duration: 2s;
+}
+
+@keyframes letter__body {
+  0%   {width: 501px; height: 270px;}
+  100% {width: 601px; height: 350px;}
+}
+
+/* The element to apply the animation to */
+.letter__body {
+  animation-name: letter__body;
+  animation-duration: 2s;
+}
+
+@media only screen and (max-width: 700px) {
+  @keyframes letter__body {
+    0%   {width: 80%; height: 270px;}
+    100% {width: 100%; max-height: 350px;}
+  }
+  @keyframes letter {
+    0%   {left: 50%; top:0%; opacity: 0; width: 90%;}
+    100% {left:50%; top:35%; opacity: 1; width: 90%;}
+  }
+  @keyframes video {
+    0%   {left: 50%; top:58%;}
+    100% {left:50%; top:61%;}
+  }
+}
+
+/* The animation code */
+@keyframes letter_button {
+  0%   {opacity: 0;}
+  70%   {opacity: 0;}
+  100% {opacity: 1;}
+}
+
+/* The element to apply the animation to */
+.letter__button {
+  animation-name: letter_button;
+  animation-duration: 3s;
+}
+
+
+/**/
+/* The animation code */
+@keyframes catalogue__body {
+  0%   {opacity: 0; margin-top: 0;}
+  100% {opacity: 1; margin-top: 5vh;}
+}
+
+/* The element to apply the animation to */
+.catalogue__body {
+  animation-name: catalogue__body;
+  animation-duration: 2s;
+}

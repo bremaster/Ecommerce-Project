@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "staging": "envlop-project-staging",
+    "product": "envlop-project-product"
+  }
+}
