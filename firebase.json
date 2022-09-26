@@ -1,0 +1,28 @@
+{
+  "hosting": {
+    "public": "build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/afterpaylink",
+        "destination": "/afterpay-top.html"
+      },
+      {
+        "source": "afterpaylink/",
+        "destination": "/afterpay-top.html"
+      },
+      {
+        "source": "/giftshare",
+        "destination": "/reciever-top.html"
+      },
+      {
+        "source": "/giftshare/*",
+        "destination": "/reciever-top.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
