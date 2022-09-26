@@ -2,39 +2,31 @@ import React from 'react'
 
 import { FormControl, Select, OutlinedInput, SelectChangeEvent } from '@mui/material'
 
-import makeStyles from '@mui/styles/makeStyles'
+import { styled } from '@mui/system'
 
-const useStyles = makeStyles({
-  wrapper: {
-    '& > div.MuiInputBase-root': {
-      borderRadius: '10px',
-    },
-    '& select:focus': {
-      borderRadius: '10px',
-    },
-    '& select': {
-      padding: '12px 10px',
-      border: '1px solid #c4c4c4',
-      borderRadius: '10px',
-    },
-    '& select option[value=""]': {
-      color: '#9F9F9F', // placeholder color default
-    },
+const Wrapper = styled(FormControl)({
+  '& > div.MuiInputBase-root': {
+    borderRadius: '10px',
   },
-  //https://stackoverflow.com/questions/61344448/remove-blue-outline-from-select-box-react-material-ui
-  deleteBlueOutline: {
-    '& .MuiOutlinedInput-notchedOutline': {
-      border: '1px solid #c4c4c4',
-    },
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-      border: '1px solid #c4c4c4',
-    },
-    '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-      border: '#c4c4c4',
-    },
-    '& .Mui-disabled .MuiOutlinedInput-notchedOutline': {
-      border: '#c4c4c4',
-    },
+  '& select:focus': {
+    borderRadius: '10px',
+  },
+  '& select': {
+    padding: '12px 10px',
+    border: '1px solid #c4c4c4',
+    borderRadius: '10px',
+  },
+  '& select option[value=""]': {
+    color: '#9F9F9F', // placeholder color default
+  },
+  '& fieldset': {
+    border: '0 !important',
+  },
+  '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+    border: '#c4c4c4',
+  },
+  '& .Mui-disabled .MuiOutlinedInput-notchedOutline': {
+    border: '#c4c4c4',
   },
 })
 
@@ -45,12 +37,13 @@ export const FormPullDown = <T extends string | number>(props: {
   items: T[]
   placeholder: string
   inputRef: React.Ref<unknown>
+  id?: string
+  name?: string
 }): JSX.Element => {
-  const classes = useStyles()
   const labelId = `${props.label}-select-label`
 
   return (
-    <FormControl fullWidth className={`${classes.wrapper} ${classes.deleteBlueOutline}`}>
+    <Wrapper fullWidth>
       <Select
         native
         autoWidth
@@ -58,7 +51,8 @@ export const FormPullDown = <T extends string | number>(props: {
         variant="outlined"
         input={<OutlinedInput />}
         labelId={labelId}
-        id={`${labelId} input`}
+        id={props.id}
+        name={props.id}
         value={props.value}
         label={props.label}
         onChange={props.handleChange}
@@ -73,6 +67,6 @@ export const FormPullDown = <T extends string | number>(props: {
           </option>
         ))}
       </Select>
-    </FormControl>
+    </Wrapper>
   )
 }

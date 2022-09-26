@@ -1,71 +1,102 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { Box, Stack, Typography } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
+import { Box, Stack } from '@mui/material'
+
+import { styled } from '@mui/system'
+
 import { CommonTitle } from './components/CommonTitle'
-
 import { EventItem } from 'organisms'
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    wrapper: {
-      maxWidth: '800px',
-      width: '90%',
-      margin: '0 auto',
-      marginBottom: '350px',
-      [theme.breakpoints.down(1000)]: {
-        marginTop: '200px',
-      },
-    },
-    title: {
-      fontFamily: 'Noto Sans JP',
-      fontSize: '15px',
-      fontWeight: 400,
-      lineHeight: '27px',
-      letterSpacing: '0.03em',
-      textAlign: 'left',
-      color: '#4A4A4A',
-      [theme.breakpoints.down(1000)]: {
-        fontSize: '13px',
-      },
-    },
-    list: {
-      width: '100%',
-    },
-  })
-)
+const EventWrap = styled(Box)((props) => ({
+  maxWidth: '1100px',
+  width: '100%',
+  margin: '0 auto',
+  marginBottom: '120px',
+  padding: '0 30px',
+  [props.theme.breakpoints.down(900)]: {
+    padding: '0 25px',
+  },
+}))
 
-export const Event = () => {
-  const classes = useStyles()
+const EventList = styled(Stack)((props) => ({
+  width: '100%',
+  marginTop: 102,
+  flexDirection: 'row',
+  gap: '18px',
+  [props.theme.breakpoints.down(900)]: {
+    gap: '10px',
+    fontSize: '13px',
+    marginTop: 50,
+  },
+  [props.theme.breakpoints.down(1100)]: {
+    flexDirection: 'column',
+  },
+}))
+
+const EventGroupRow = styled(Stack)((props) => ({
+  gap: '18px',
+  [props.theme.breakpoints.down(900)]: {
+    gap: '10px',
+  },
+}))
+
+export type EventProps = {
+  howManyInCart: number
+}
+
+export const Event = ({ howManyInCart }: EventProps) => {
+  const navigate = useNavigate()
+
+  const goTo = (scene: string) => {
+    if (howManyInCart === 0) {
+      navigate('/product/onboarding/' + scene)
+    } else {
+      navigate('/product/choose/' + scene)
+    }
+  }
 
   return (
-    <Box className={classes.wrapper}>
-      <CommonTitle title="LIFE EVENT" subtitle="ライフイベント" />
-
-      <Typography className={classes.title}>
-        各ライフイベントのギフトマナーを加味した商品選定や最適なのし紙等スムーズにマナーに関する迷いなくギフトを贈れるように設計されています。
-      </Typography>
-
-      <Stack gap={3} mt={7.5} className={classes.list}>
-        <Stack gap={3} direction={{md:'row', xs:'column'}}>
-          <EventItem image="/landing/life_event_list/baby.jpg" description="出産祝い" />
+    <EventWrap>
+      <CommonTitle title="GIFT SCENE" subtitle="ギフトシーンから選ぶ" />
+      <EventList>
+        <EventGroupRow justifyContent="center" direction="row">
           <EventItem
-            image="/landing/life_event_list/clothes.jpg"
+            image="/landing/life_event_list/item1.png"
+            description="誕生日"
+            onClick={() => goTo('tanjobi')}
+          />
+          <EventItem
+            image="/landing/life_event_list/item2.png"
+            description="お礼"
+            onClick={() => goTo('orei')}
+          />
+        </EventGroupRow>
+        <EventGroupRow justifyContent="center" direction="row">
+          <EventItem
+            image="/landing/life_event_list/item3.png"
+            description="出産祝い"
+            onClick={() => goTo('syussannIwai')}
+          />
+          <EventItem
+            image="/landing/life_event_list/item4.png"
+            description="結婚祝い"
+            onClick={() => goTo('kekkonIwai')}
+          />
+        </EventGroupRow>
+        <EventGroupRow justifyContent="center" direction="row">
+          <EventItem
+            image="/landing/life_event_list/item5.png"
             description="出産内祝い"
-          />
-        </Stack>
-        <Stack gap={3} direction={{md:'row', xs:'column'}}>
-          <EventItem
-            image="/landing/life_event_list/wedding.jpg"
-            description="結婚祝い ※準備中"
+            onClick={() => goTo('syussannUchiIwai')}
           />
           <EventItem
-            image="/landing/life_event_list/boxes.jpg"
-            description="結婚内祝い ※準備中"
+            image="/landing/life_event_list/item6.png"
+            description="結婚内祝い"
+            onClick={() => goTo('kekkonUchiIwai')}
           />
-        </Stack>
-      </Stack>
-    </Box>
+        </EventGroupRow>
+      </EventList>
+    </EventWrap>
   )
 }

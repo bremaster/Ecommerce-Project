@@ -1,41 +1,26 @@
 import React from 'react'
 
-import { Box, Stack } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
-import { GradientButton } from './components/GradientButton'
+import { Stack } from '@mui/material'
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    wrapper: {
-      overflow: 'hidden',
-      width: '100%',
-      '& img': {
-        width: '100%',
-        [theme.breakpoints.down(1000)]: {
-          width: '150%',
-        },
-      },
-      '& div': {
-        [theme.breakpoints.down(1000)]: {
-          display: 'none',
-        },
-      },
-    },
-  })
-)
+export const HeroCover: React.FC<{ isMobile: boolean }> = ({ isMobile = true }) => {
+  const videoSrc = isMobile
+    ? 'https://res.cloudinary.com/zeft/video/upload/v1659428113/zeft_landing/movie-480-480_c6qjkd.mp4'
+    : 'https://res.cloudinary.com/zeft/video/upload/v1659428113/zeft_landing/movie-1920-1080_mc0kbr.mp4'
 
-export const HeroCover: React.FC = () => {
-  const classes = useStyles()
   return (
-    <Stack alignItems="center" className={classes.wrapper}>
-      <Box
-        component="img"
-        src="https://res.cloudinary.com/zeft/image/upload/v1653537449/zeft_landing/ZEFT_25_256_H_rhojnh.gif"
-      />
-      <Stack alignItems="center" py="100px">
-        <GradientButton />
-      </Stack>
+    <Stack alignItems="center" sx={{ overflow: 'hidden', width: '100%' }}>
+      {/* Add key prop to rerender video */}
+      <video
+        loop
+        muted
+        autoPlay
+        controls={false}
+        playsInline={true}
+        key={videoSrc}
+        style={{ width: '100%' }}
+      >
+        <source src={videoSrc} type="video/mp4" />
+      </video>
     </Stack>
   )
 }

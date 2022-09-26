@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react'
 
-import { Box, Typography, Divider } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
+import { Box, Typography, Stack } from '@mui/material'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 
-import { SquareButton } from 'atoms'
-import { MenuAppBar, PaymentFormStripe } from 'organisms'
-import { EngagedRow } from 'molecules'
-import { Layout } from '../../../templates/Layout'
-import { COLOR } from 'theme'
+import { GradientButton } from 'atoms'
+import { MenuAppBar, PaymentFormStripe, Footer, Card, CheckoutSummary } from 'organisms'
+import { Layout } from 'templates/Layout'
 
 // Make sure to call loadStripe outside of a component’s render to avoid
 // recreating the Stripe object on every render.
@@ -18,29 +15,12 @@ const stripePromise = loadStripe(
   process.env.REACT_APP_STRIPE_PUBLISHABLE_API_KEY as string
 )
 
-const useStyles = makeStyles({
-  divider: {
-    borderColor: COLOR.subtleGray,
-  },
-  priceSection: {
-    fontFamily: '"Noto Sans JP", -apple-system, sans-serif',
-    fontSize: '14px',
-    fontWeight: 400,
-    letterSpacing: '0',
-  },
-  priceSectionBold: {
-    fontFamily: '"Noto Sans JP", -apple-system, sans-serif',
-    fontSize: '14px',
-    fontWeight: 700,
-    letterSpacing: '0',
-  },
-})
-
 type Props = {
   item: {
     name: string
     photo: string
     brand: string
+    noshiOk: boolean
   }
   productPrice: number
   shippingFee: number
@@ -49,13 +29,10 @@ type Props = {
 
 export const CheckOut: React.FC<Props> = (props) => {
   const [isPaymentFormShown, setIsPaymentFormShown] = useState(false)
-  const classes = useStyles()
 
   const handleNextButton = () => {
     setIsPaymentFormShown(true)
   }
-
-  const sellingPrice = props.productPrice + props.shippingFee
 
   // scroll to payment form area
   useEffect(() => {
@@ -77,11 +54,11 @@ export const CheckOut: React.FC<Props> = (props) => {
       // web fonts not work on some iOS devices
       fontFamily: '"Noto Sans JP", -apple-system, sans-serif',
       borderRadius: '0px',
-      colorBackground: COLOR.formGrey,
+      colorBackground: '#F7F7F7',
     },
     rules: {
       '.Label': {
-        color: '#000000',
+        color: '#4A4A4A',
         marginTop: '5px',
         marginBottom: '8px',
         letterSpacing: '0.5px',
@@ -95,12 +72,11 @@ export const CheckOut: React.FC<Props> = (props) => {
         fontSize: '16px',
         lineHeight: '20px',
         padding: '12px 10px',
-        borderTopLeftRadius: '4px',
-        borderTopRightRadius: '4px',
+        borderRadius: '10px',
+        color: '#4A4A4A',
       },
       '.Tab': {
-        borderTopLeftRadius: '4px',
-        borderTopRightRadius: '4px',
+        borderRadius: '10px',
       },
     },
   }
@@ -116,121 +92,86 @@ export const CheckOut: React.FC<Props> = (props) => {
   }
 
   return (
-    <Layout>
-      <Box width="100%">
-        <MenuAppBar />
-        <Header />
+    <>
+      <MenuAppBar giftBoxButton={false} />
+      <Layout maxWidth="md">
+        <Box width="100%">
+          <PageTitle />
 
-        {/* gift info section */}
-        <Divider className={classes.divider} />
-        <Box py={2} px="18px">
-          <EngagedRow
-            mainText={props.item.name}
-            subText={props.item.brand}
-            image={props.item.photo}
-          />
-        </Box>
-        <Divider className={classes.divider} />
+          {/* gift info */}
+          <Card num={1} header="選ばれたギフト" width="100%" mb="2rem">
+            <Box mb={{ xs: '1.5rem', md: '2rem' }}>
+              <CheckoutSummary
+                itemSummary={{
+                  img: props.item.photo,
+                  brand: props.item.brand,
+                  itemName: props.item.name,
+                  isNoshi: props.item.noshiOk,
+                }}
+                priceTable={{
+                  productPrice: props.productPrice,
+                  minShipping: props.shippingFee,
+                  maxShipping: props.shippingFee,
+                  defaultCollapse: true,
+                }}
+              />
+            </Box>
+          </Card>
 
-        {/* price section */}
-        <Box mt={1}>
-          <Box px="18px" display="flex" justifyContent="space-between">
-            <Typography className={classes.priceSection}>商品価格</Typography>
-            <Typography className={classes.priceSection}>
-              {`${props.productPrice.toLocaleString('en-US')} 円（税込）`}
-            </Typography>
+          <Box width="100%" mt="2rem" mb="2rem">
+            {!isPaymentFormShown && (
+              <GradientButton onClick={handleNextButton}>決済へ進む</GradientButton>
+            )}
           </Box>
-          <Box px="18px" display="flex" justifyContent="space-between">
-            <Typography className={classes.priceSection}>配送手数料</Typography>
-            <Typography className={classes.priceSection}>
-              {`${props.shippingFee.toLocaleString('en-US')} 円（税込）`}
-            </Typography>
-          </Box>
-          <Box px="18px" display="flex" justifyContent="space-between">
-            <Typography className={classes.priceSectionBold}>合計金額</Typography>
-            <Typography className={classes.priceSectionBold}>
-              {`${sellingPrice.toLocaleString('en-US')} 円（税込）`}
-            </Typography>
-          </Box>
-        </Box>
 
-        <Box width="100%" mt="2rem" mb="2rem">
-          <SquareButton
-            buttonType="primary"
-            onClick={handleNextButton}
-            fullWidth
-            inactive={isPaymentFormShown}
-          >
-            決済へ進む
-          </SquareButton>
+          {/* payment form */}
+          <Box minHeight="420px" display={isPaymentFormShown ? 'block' : 'none'}>
+            {!!props.paymentClientSecret ? (
+              // FIXME: ts error will be fixed by https://github.com/stripe/react-stripe-js/pull/280
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              <Elements options={stripeOptions} stripe={stripePromise}>
+                <PaymentFormStripe clientSecret={props.paymentClientSecret} />
+              </Elements>
+            ) : (
+              <Typography>Loading...</Typography>
+            )}
+          </Box>
         </Box>
-
-        {/* payment form */}
-        <Box minHeight="420px" display={isPaymentFormShown ? 'block' : 'none'}>
-          {!!props.paymentClientSecret ? (
-            // FIXME: ts error will be fixed by https://github.com/stripe/react-stripe-js/pull/280
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            <Elements options={stripeOptions} stripe={stripePromise}>
-              <PaymentFormStripe clientSecret={props.paymentClientSecret} />
-            </Elements>
-          ) : (
-            <Typography>Loading...</Typography>
-          )}
-        </Box>
-      </Box>
-    </Layout>
+      </Layout>
+      <Footer />
+    </>
   )
 }
 
-const useHeaderStyle = makeStyles({
-  subTitle: {
-    fontFamily: 'Roboto',
-    fontWeight: 'bold',
-    fontSize: '14px',
-    lineHeight: '25px',
-    letterSpacing: '0.25em',
-    color: COLOR.gray700,
-  },
-  title: {
-    fontFamily: 'Roboto',
-    fontWeight: 500,
-    fontSize: '24px',
-    lineHeight: '25px',
-    letterSpacing: '0.05em',
-    color: COLOR.gray800,
-  },
-  body: {
-    fontFamily: 'Roboto',
-    fontSize: '14px',
-    lineHeight: '25px',
-    letterSpacing: '0.05em',
-    color: COLOR.gray700,
-    whiteSpace: 'pre',
-    textAlign: 'center',
-  },
-})
-
-const Header = () => {
-  const classes = useHeaderStyle()
-
-  return (
-    <Box mt={1} mb="2rem" display="flex" flexDirection="column" alignItems="center">
-      <Typography>
-        <Box className={classes.subTitle}>CHECKOUT</Box>
-      </Typography>
-      <Box mt="1rem">
-        <Typography>
-          <Box className={classes.title}>ギフトが選択されました</Box>
-        </Typography>
-      </Box>
-      <Typography>
-        <Box mt="1rem" className={classes.body}>
-          {
-            'お相手がギフトを選び終えました。\n下記からお支払いが済み次第、配送を開始します。'
-          }
-        </Box>
-      </Typography>
-    </Box>
-  )
-}
+const PageTitle = () => (
+  <Stack direction="column" alignItems="center" py="60px">
+    <Typography
+      sx={{
+        fontFamily: "'Outfit'",
+        fontStyle: 'normal',
+        fontWeight: 600,
+        fontSize: '28px',
+        lineHeight: '35px',
+        textAlign: 'center',
+        color: '#4A4A4A',
+        marginBottom: '0.5rem',
+      }}
+    >
+      お支払い
+    </Typography>
+    <Typography
+      sx={{
+        fontFamily: "'Outfit'",
+        fontStyle: 'normal',
+        fontWeight: 600,
+        fontSize: '14px',
+        lineHeight: '18px',
+        letterSpacing: '0.05em',
+        color: '#4A4A4A',
+      }}
+    >
+      Checkout
+    </Typography>
+  </Stack>
+)

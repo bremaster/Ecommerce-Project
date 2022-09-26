@@ -2,13 +2,14 @@ import React from 'react'
 
 import { useSpring, animated, config } from 'react-spring'
 
-import makeStyles from '@mui/styles/makeStyles'
 import { StartGiftDiagnosisButton } from './StartGiftDiagnosisButton'
+
+import { styled, experimental_sx as sx } from '@mui/system'
 
 /* const AnimatedBox = animated(Box); */
 
-const useStyles = makeStyles({
-  wrapper: {
+const StickyCTAButtonWrap = styled(animated.div)(
+  sx({
     position: 'sticky',
     width: '100%',
     display: 'grid',
@@ -17,8 +18,8 @@ const useStyles = makeStyles({
     padding: '10px 0',
     backgroundColor: 'white',
     bottom: 0,
-  },
-})
+  })
+)
 
 export const StickyCTAButton = ({ isShown }: { isShown: boolean }): JSX.Element => {
   const styleProps = useSpring({
@@ -27,11 +28,10 @@ export const StickyCTAButton = ({ isShown }: { isShown: boolean }): JSX.Element 
     opacity: isShown ? 100 : 0,
     config: config.stiff,
   })
-  const classes = useStyles()
 
   return (
-    <animated.div className={classes.wrapper} style={styleProps}>
+    <StickyCTAButtonWrap style={styleProps}>
       <StartGiftDiagnosisButton />
-    </animated.div>
+    </StickyCTAButtonWrap>
   )
 }

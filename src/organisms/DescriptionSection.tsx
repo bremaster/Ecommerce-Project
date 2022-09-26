@@ -1,10 +1,9 @@
 import React from 'react'
 
-import { Box, Typography } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
+import { Box, Typography, Stack } from '@mui/material'
 /* import Image from 'material-ui-image'; */
 
-import { COLOR } from 'theme'
+import { styled } from '@mui/system'
 
 type Props = {
   header?: string
@@ -13,31 +12,48 @@ type Props = {
   body?: string
 }
 
-const useStyles = makeStyles({
-  header: {
-    padding: '1rem 0 0.5rem 0',
+const Header = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 700,
+  fontSize: '27px',
+  lineHeight: '39.1px',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  marginBottom: '39px',
+  [props.theme.breakpoints.down('md')]: {
+    marginBottom: '18px',
+    fontSize: 18,
+    lineHeight: '26px',
   },
-  imageBox: {
+}))
+
+const Body = styled(Typography)((props) => ({
+  whiteSpace: 'pre-line',
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: 15,
+  lineHeight: '27px',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 14,
+    lineHeight: '25.2px',
+  },
+}))
+
+const ImageBox = styled(Box)((props) => ({
+  width: '100%',
+  maxWidth: '330px',
+  [props.theme.breakpoints.up('md')]: {
+    width: '330px',
+  },
+  '& > img': {
     width: '100%',
-    margin: '1rem 0 0.5rem 0',
-    '& > img': {
-      width: '100%',
-    },
+    borderRadius: '10px',
   },
-  caption: {
-    padding: '0.4rem 0 0.25rem 0',
-  },
-  body: {
-    whiteSpace: 'pre-line',
-    padding: '1rem 0 0.5rem 0',
-  },
-  bar: {
-    margin: '2.5rem 0 0.75rem 0',
-    width: '40px',
-    height: '4px',
-    backgroundColor: COLOR.primaryNavy,
-  },
-})
+}))
 
 export const DescriptionSection: React.FC<Props> = ({
   header,
@@ -45,30 +61,28 @@ export const DescriptionSection: React.FC<Props> = ({
   imageCaption,
   body,
 }) => {
-  const classes = useStyles()
   return (
-    <Box>
-      {!!header && <div className={classes.bar}></div>}
-      {!!header && (
-        <Typography variant="h4" className={classes.header}>
-          {header}
-        </Typography>
-      )}
-      {!!imageURL && (
-        <Box className={classes.imageBox}>
-          <img src={imageURL || ''} />
-        </Box>
-      )}
-      {!!imageCaption && (
-        <Typography variant="caption" className={classes.caption}>
-          {imageCaption}
-        </Typography>
-      )}
-      {!!body && (
-        <Typography variant="body1" className={classes.body}>
-          {body}
-        </Typography>
-      )}
-    </Box>
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      alignItems={{ md: 'end' }}
+      gap={{ md: '57px', xs: '19px' }}
+    >
+      <Box>
+        {!!imageURL && (
+          <ImageBox>
+            <img src={imageURL || ''} />
+          </ImageBox>
+        )}
+        {!!imageCaption && (
+          <Typography variant="caption" sx={{ padding: '0.4rem 0 0.25rem 0' }}>
+            {imageCaption}
+          </Typography>
+        )}
+      </Box>
+      <Box>
+        {!!header && <Header>{header}</Header>}
+        {!!body && <Body>{body}</Body>}
+      </Box>
+    </Stack>
   )
 }

@@ -1,11 +1,10 @@
 import { useState, useEffect, useReducer } from 'react'
 
-import { useHistory, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import {
-  QUERY_GET_PRODUCTS_BY_IDS,
   QUERY_GET_PRODUCTS_WITH_FILTER,
   QUERY_GET_PRICE_AND_KEYWORDS,
 } from 'container/hooks/index'
@@ -16,77 +15,76 @@ import {
   FormAction,
   FormState,
   FormStateWithSetter,
-  MAX_PRICE,
-  MIN_PRICE,
+  SearchConfig,
 } from 'constants/searchForm'
-import { Product, ProductWithHandlerAndStatus } from 'constants/index'
+import { Product, ProductWithHandlerAndStatus, SCENE_CONFIG_LIST } from 'constants/index'
 import { SelectStatus } from '../../../constants/index'
-import { useCollaboratorProfile } from 'container/CollaboratorContainer'
 
 import { orgCeil, orgFloor, range } from 'utilities/CommonFunctions'
-
-const isPreview = process.env.REACT_APP_ENV === 'staging' ? true : false
+import { dataLayerPush } from 'utilities/GoogleAnalytics'
 
 const LAYOUT_BREAK_POINT = 1000
 
 /**
  * 回答IDからリコメンド商品IDを取得し、商品詳細情報を取得
  */
-export function useRecommendProducts(
-  answers: { [key: number]: string } = {}
-): {
+export function useRecommendProducts(): {
   products: Array<ProductWithHandlerAndStatus>
-  loading: boolean
   productsInCart: Array<ProductWithHandlerAndStatus>
   scenesInCart: Array<GiftScene>
-  isDone: string
   searchForm: FormStateWithSetter
+  giftScene: GiftScene
+  addOnSelectedHandler: (item: Product) => ProductWithHandlerAndStatus
 } {
-  const history = useHistory()
+  const navigate = useNavigate()
   const location = useLocation()
-  const { quizSetting } = useCollaboratorProfile()
-
-  const [isDone, setIsDone] = useState('')
-  const [fetchProductsByIds, { loading, data }] = useLazyQuery<{
-    productDetailCollection: { items: Array<Product> }
-  }>(QUERY_GET_PRODUCTS_BY_IDS)
 
   let productsSorted: Array<ProductWithHandlerAndStatus> = []
 
-  // normal filter condition without recommend API
-  const formStateInCache = sessionStorage.getItem('searchForm')
-  const initialFormState: FormState = !!formStateInCache
-    ? (JSON.parse(formStateInCache as string) as FormState)
-    : INITIAL_FORM_STATE
-  const isSmallScreen = useMediaQuery(`(max-width:${LAYOUT_BREAK_POINT}px)`)
-  const itemsPerPage = isSmallScreen ? 12 : 30
+  // filter condition
+  const initialFormState: FormState = INITIAL_FORM_STATE
+  const isSmallScreen = useMediaQuery(`(max-width:${LAYOUT_BREAK_POINT}px)`, {
+    defaultMatches: true,
+  })
+  const itemsPerPage = isSmallScreen ? 20 : 30
 
   const [form, dispatchAction] = useReducer(formReducer, initialFormState)
   const [fetchProductsByFilter, responseFetchProductsByFilter] = useLazyQuery<{
     productDetailCollection: { items: Array<Product>; total: number }
   }>(QUERY_GET_PRODUCTS_WITH_FILTER)
   const [fetchPriceAndKeywords, responseFetchPriceAndKeywords] = useLazyQuery<{
-    productDetailCollection: {
-      total: number
-      items: Array<{ price: number; keywords: string[] }>
+    giftSceneCollection: {
+      items: Array<{ keywords: string[]; minPrice: number; maxPrice: number }>
     }
   }>(QUERY_GET_PRICE_AND_KEYWORDS)
 
-  // watch form and fetch API
+  // get scene from url
+  const [giftScene, setGiftScene] = useState<GiftScene>('すべてのギフト')
+  useEffect(() => {
+    const path = location.pathname
+    if (path.startsWith('/product/choose')) {
+      const sceneParam = path.split('/').pop()
+      const giftSceneTemp = SCENE_CONFIG_LIST.find((item) => item.id === sceneParam)
+      const giftScene = !!giftSceneTemp ? giftSceneTemp.title : 'すべてのギフト'
+      setGiftScene(giftScene)
+    }
+  }, [location.pathname])
+
+  // watch parameters and fetch API
   useEffect(() => {
     fetchProductsByFilter({
       variables: {
-        isPreview,
         limit: itemsPerPage,
         skip: itemsPerPage * (form.page.current - 1),
         keywords: form.keywords.values.length >= 1 ? form.keywords.values : ['default'],
-        scene: form.scene.value,
+        scene: giftScene,
         minPrice: form.minPrice.value,
         maxPrice: form.maxPrice.value,
+        sortKeys: [SearchConfig[giftScene].itemSortKey + '_DESC', 'sys_publishedAt_DESC'],
       },
     })
   }, [
-    form.scene.value,
+    giftScene,
     form.minPrice.value,
     form.maxPrice.value,
     form.keywords.values.toString(),
@@ -96,12 +94,13 @@ export function useRecommendProducts(
 
   useEffect(() => {
     fetchPriceAndKeywords({
-      variables: { isPreview, limit: 100, skip: 0, scene: form.scene.value },
+      variables: { scene: giftScene },
     })
-  }, [form.scene.value])
+    dispatchAction({ type: 'changePage', payload: 1 })
+  }, [giftScene])
 
   // watch api result and synchronize the result with form
-  const allItems = responseFetchPriceAndKeywords?.data?.productDetailCollection.items
+  const allItems = responseFetchPriceAndKeywords?.data?.giftSceneCollection.items
   const [keywordOptions, priceOptions] = getKeywordAndPriceOptions(allItems)
   const maxPage = !!responseFetchProductsByFilter?.data?.productDetailCollection.total
     ? Math.ceil(
@@ -140,41 +139,26 @@ export function useRecommendProducts(
       : []
 
   const [selectedItems, setSelectedItems] = useState<Array<Product>>(prevSelectedItems)
-  const [selectedScenes, setSelectedScenes] = useState<
-    Array<{ itemId: string; scene: GiftScene }>
-  >(prevSelectedScenes)
-  const [productIds, setProductIds] = useState([])
-
-  const isRecommend = isDone === 'DONE' || isDone === 'PENDING' || productIds.length > 0
-
-  useEffect(() => {
-    // chooseページになってから商品が必要
-    const LOADING_WAIT = 8000
-    if (location.pathname === '/product/loading') {
-      setIsDone('PENDING')
-      //非同期で取得しているリコメンド一覧が遅いと、前回リコメンドしたものを表示してしまうのでいったん空に
-      setProductIds([])
-      handleSurveyCompleted([...Object.values(answers), ...quizSetting.defaultAnswers])
-      const timer = setTimeout(() => {
-        setIsDone('DONE')
-        history.push('/product/choose')
-      }, LOADING_WAIT)
-      return () => clearTimeout(timer)
-    } else {
-      setIsDone('')
-    }
-  }, [location])
+  const [selectedScenes, setSelectedScenes] =
+    useState<Array<{ itemId: string; scene: GiftScene }>>(prevSelectedScenes)
 
   const addItem = (item: Product) => {
     const newSelectedItems = [...selectedItems, item]
     const newSelectedScenes = [
       ...selectedScenes,
-      { itemId: item.sys.id, scene: form.scene.value },
+      { itemId: item.sys.id, scene: giftScene },
     ]
     setSelectedItems(newSelectedItems)
     setSelectedScenes(newSelectedScenes)
     sessionStorage.setItem('selectedItems', JSON.stringify(newSelectedItems))
     sessionStorage.setItem('selectedScenes', JSON.stringify(newSelectedScenes))
+    dataLayerPush({
+      event: 'gift added',
+      giftId: item.sys.id,
+      giftName: item.title,
+      giftPrice: item.productPrice,
+      sceneOfGiftSelected: giftScene,
+    })
   }
   const removeItem = (item: Product) => {
     const removeTargetId = item.sys.id
@@ -190,98 +174,50 @@ export function useRecommendProducts(
     sessionStorage.setItem('selectedScenes', JSON.stringify(newSelectedScenes))
   }
 
-  const addClickHandler = (data: Product[]): Array<ProductWithHandlerAndStatus> => {
-    return data.map((item) => {
-      let handler
-      let status: SelectStatus
-      if (
-        // confirm ページでクリックされた際も必要
-        selectedItems.map((item) => item.sys.id).includes(item.sys.id) &&
-        location.pathname === '/product/chooseconfirm'
-      ) {
-        handler = () => {
-          if (selectedItems.length === 1) {
-            history.push('/product/choose')
-          }
-          removeItem(item)
-        }
-        status = 'SELECTED'
-      } else if (selectedItems.map((item) => item.sys.id).includes(item.sys.id)) {
-        handler = () => {
-          removeItem(item)
-        }
-        status = 'SELECTED'
-      } else if (selectedItems.length >= MAX_SELECTABLE_ITEMS) {
-        handler = () => {
-          history.goBack()
-        }
-        status = 'UNSELECTABLE'
-      } else {
-        handler = () => {
-          addItem(item)
-        }
-        status = 'SELECTABLE'
-      }
-      return {
-        ...item,
-        handleClick: handler,
-        selectableStatus: status,
-      }
-    })
+  const goToGiftBox = () => {
+    navigate('/product/giftbox')
   }
 
-  const products =
-    typeof data !== 'undefined' && isRecommend === true
-      ? addClickHandler(data.productDetailCollection.items)
-      : []
-
-  const productsInCart = addClickHandler(selectedItems)
-
-  const handleSurveyCompleted = async (answers: Array<string>) => {
-    const res = await fetch(process.env.REACT_APP_CLOUD_FUNCTION_RECOMEND_URL as string, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ answer_ids: answers }),
-      cache: 'no-cache',
-    })
-    const json = await res.json()
-    const product_ids = json.data.map((item: { id: string }) => item.id)
-    fetchProductsByIds({
-      variables: { ids: product_ids, limit: 10, preview: isPreview },
-    })
-    setProductIds(product_ids)
+  const addClickHandler = (item: Product): ProductWithHandlerAndStatus => {
+    let handler
+    let status: SelectStatus
+    if (selectedItems.map((item) => item.sys.id).includes(item.sys.id)) {
+      handler = () => {
+        removeItem(item)
+        goToGiftBox()
+      }
+      status = 'SELECTED'
+    } else if (selectedItems.length >= MAX_SELECTABLE_ITEMS) {
+      handler = () => {
+        navigate(-1)
+      }
+      status = 'UNSELECTABLE'
+    } else {
+      handler = () => {
+        addItem(item)
+        goToGiftBox()
+      }
+      status = 'SELECTABLE'
+    }
+    return {
+      ...item,
+      handleClick: handler,
+      selectableStatus: status,
+    }
   }
+
+  const productsInCart = selectedItems.map(addClickHandler)
 
   // フィルタリングの結果のデータが存在する場合
-  // 直接レコメンド一覧にアクセスされた場合のハンドリングも含む
-  if (isRecommend === false && !!responseFetchProductsByFilter?.data) {
+  if (!!responseFetchProductsByFilter?.data) {
     const { items } = responseFetchProductsByFilter.data.productDetailCollection
-    productsSorted = addClickHandler(items)
-    sessionStorage.setItem('searchForm', JSON.stringify(form))
-  }
-
-  // リコメンドされた順序に則った商品リストを作成
-  if (isRecommend === true && productsSorted.length === 0) {
-    productIds.forEach((productId) => {
-      const product = products.find((item) => item.sys.id === productId)
-      if (typeof product !== 'undefined') {
-        productsSorted = [...productsSorted, product]
-      }
-    })
+    productsSorted = items.map(addClickHandler)
   }
 
   return {
     products: productsSorted,
-    loading,
     productsInCart,
-    isDone,
     searchForm: {
-      scene: {
-        ...form.scene,
-        setValue: (value) => dispatchAction({ type: 'changeScene', payload: value }),
-      },
       keywords: {
         ...form.keywords,
         setValues: (values) =>
@@ -302,17 +238,14 @@ export function useRecommendProducts(
       defaultPriceOptions: form.defaultPriceOptions,
     },
     scenesInCart: selectedScenes.map((obj) => obj.scene),
+    giftScene: giftScene,
+    addOnSelectedHandler: addClickHandler,
   }
 }
 
 function formReducer(state: FormState, action: FormAction): FormState {
   const init = INITIAL_FORM_STATE
   switch (action.type) {
-    case 'changeScene': {
-      // reset all values except for `scene`
-      const newScene = { value: action.payload, options: init.scene.options }
-      return { ...init, scene: newScene }
-    }
     case 'changeKeywords': {
       const newKeywords = { values: action.payloads, options: state.keywords.options }
       // go to the first page
@@ -399,26 +332,16 @@ function formReducer(state: FormState, action: FormAction): FormState {
 }
 
 function getKeywordAndPriceOptions(
-  items: Array<{ price: number; keywords: string[] }> | undefined
+  items: Array<{ keywords: string[]; minPrice: number; maxPrice: number }> | undefined
 ): [string[], number[]] {
   if (items === undefined || items.length === 0) {
     return [[], []]
   }
 
-  let keywordList: Array<string> = []
-  let priceList: Array<number> = []
+  const keywordListUnique = items[0].keywords
 
-  for (const item of items) {
-    keywordList = [...keywordList, ...item.keywords]
-  }
-
-  priceList = items.map((item) => item.price)
-
-  const keywordListUnique = Array.from(new Set(keywordList))
-  const priceListUnique = Array.from(new Set(priceList))
-
-  const minPrice = priceListUnique.length > 1 ? Math.min(...priceListUnique) : MIN_PRICE
-  const maxPrice = priceListUnique.length > 1 ? Math.max(...priceListUnique) : MAX_PRICE
+  const minPrice = items[0].minPrice
+  const maxPrice = items[0].maxPrice
   const minPriceFloored = orgFloor(minPrice, 1000)
   const maxPriceCeiled = orgCeil(maxPrice, 1000)
   const priceOptions = range(minPriceFloored, maxPriceCeiled + 1, 1000)

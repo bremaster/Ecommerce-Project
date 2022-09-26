@@ -1,22 +1,5 @@
 import React from 'react'
 import { Box, Stack, Typography } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-
-const useProductGuideItemStyle = makeStyles({
-  titleimage: {
-    width: '48px',
-  },
-  image: {
-    height: '72px',
-  },
-  text: {
-    fontSize: '14px',
-    lineHeight: '21px',
-    fontWeight: 700,
-    fontFamily: 'Noto Sans JP',
-    color: 'rgba(74, 74, 74, 1)',
-  },
-})
 
 type Props = {
   item: {
@@ -34,19 +17,23 @@ const ProductGuideItem: React.FC<Props> = ({
   item,
   option = { direction: 'column' },
 }) => {
-  const classes = useProductGuideItemStyle()
-
   return (
     <Stack gap={2} alignItems="center">
-      <Box component="img" src={item.title} className={classes.titleimage} />
+      <Box component="img" src={item.title} sx={{ width: '48px' }} />
       <Stack gap={2} direction={option?.direction || 'column'} alignItems="center">
-        <Box component="img" src={item.image} className={classes.image} />
+        <Box component="img" src={item.image} sx={{ height: '72px' }} />
         <Box>
           <Typography
             variant="h6"
             component="h6"
             align={option?.direction === 'row' ? 'left' : 'center'}
-            className={classes.text}
+            style={{
+              fontSize: '14px',
+              lineHeight: '21px',
+              fontWeight: 700,
+              fontFamily: 'Noto Sans JP',
+              color: 'rgba(74, 74, 74, 1)',
+            }}
           >
             {item.text1}
           </Typography>
@@ -54,7 +41,13 @@ const ProductGuideItem: React.FC<Props> = ({
             variant="h6"
             component="h6"
             align={option?.direction === 'row' ? 'left' : 'center'}
-            className={classes.text}
+            style={{
+              fontSize: '14px',
+              lineHeight: '21px',
+              fontWeight: 700,
+              fontFamily: 'Noto Sans JP',
+              color: 'rgba(74, 74, 74, 1)',
+            }}
           >
             {item.text2}
           </Typography>

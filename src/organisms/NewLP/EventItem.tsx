@@ -1,58 +1,41 @@
 import React from 'react'
 
-import { Box, Typography } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
+import { Stack, Typography } from '@mui/material'
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    wrap: {
-      position: 'relative',
-      width: '100%',
-    },
-    image: {
-      width: '100%',
-      borderRadius: '10px',
-    },
-    description: {
-      width: '100%',
-      height: '100%',
-      position: 'absolute',
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      top: 0,
-      borderRadius: '10px',
-      '& h3': {
-        fontFamily: 'Noto Sans JP',
-        fontSize: '30px',
-        fontWeight: 700,
-        lineHeight: '51px',
-        letterSpacing: '0.03em',
-        color: 'white',
-        position: 'absolute',
-        bottom: 20,
-        left: 24,
-        [theme.breakpoints.down(1000)]: {
-          fontSize: '24px',
-        },
-      },
-    },
-  })
-)
+import { styled } from '@mui/system'
+
+const Wrap = styled(Stack)({
+  height: '80px',
+  width: '157px',
+  cursor: 'pointer',
+  backgroundColor: '#F4F5F7',
+  borderRadius: '7px',
+})
+
+const Description = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  fontSize: '14px',
+  fontWeight: 500,
+  letterSpacing: '0.03em',
+  marginLeft: '15px',
+})
 
 export type EventProps = {
   image: string
   description: string
+  onClick?: () => void
 }
 
-export const EventItem = ({ image, description }: EventProps) => {
-  const classes = useStyles()
-
+export const EventItem = ({ image, description, onClick = undefined }: EventProps) => {
   return (
-    <Box className={classes.wrap}>
-      <Box component="img" src={image} className={classes.image} />
-      <Box className={classes.description}>
-        <Typography component="h3">{description}</Typography>
-      </Box>
-    </Box>
+    <Wrap
+      onClick={onClick}
+      direction="row"
+      justifyContent="space-between"
+      alignItems="center"
+    >
+      <Description>{description}</Description>
+      <img src={image} style={{ width: '60px' }} />
+    </Wrap>
   )
 }

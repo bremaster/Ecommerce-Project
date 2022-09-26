@@ -1,32 +1,43 @@
 import React from 'react'
 
-import makeStyles from '@mui/styles/makeStyles'
-import { useHistory } from 'react-router-dom'
-import { SquareButton } from 'atoms'
+import { useNavigate } from 'react-router-dom'
+import { Box } from '@mui/material'
+/* import { dataLayerPush } from 'utilities/GoogleAnalytics' */
 
-const useStyles = makeStyles({
-  commonButton: {
-    width: 'calc(100% - 1.5rem)',
-    maxWidth: '1000px',
-    background:
-      'linear-gradient(102.32deg, #FEAA69 -13.04%, #FF8B7B 51.48%, #927DED 153.9%)',
-    borderRadius: '10px',
-    color: 'white',
-    fontFamily: 'Noto Sans JP',
-  },
-})
+import { GradientButton } from 'atoms'
+
+import { useRecommendProducts } from 'container/hooks/sender/useRecommendProducts'
+import { useCtaInnerText } from '../hooks/useCtaInnerText'
 
 export const StartGiftDiagnosisButton: React.FC = () => {
-  const classes = useStyles()
-  const history = useHistory()
+  const navigate = useNavigate()
+  const ctaInnerText = useCtaInnerText()
+
+  const { productsInCart } = useRecommendProducts()
+  const howManyInCart = productsInCart.length
+
+  const hadleClick = () => {
+    /* dataLayerPush({ */
+    /*   event: 'onClickStickyCTAButton', */
+    /* }) */
+    if (howManyInCart === 0) {
+      navigate('/product/onboarding')
+    } else {
+      navigate('/product/choose')
+    }
+  }
 
   return (
-    <SquareButton
-      buttonType="primary"
-      className={classes.commonButton}
-      onClick={() => history.push('/product/top')}
+    <Box
+      sx={{
+        width: 'calc(100% - 1.5rem)',
+        maxwidth: '1000px',
+        mx: 'auto',
+      }}
     >
-      ギフト診断を始める
-    </SquareButton>
+      <GradientButton height="48px" onClick={hadleClick}>
+        {ctaInnerText}
+      </GradientButton>
+    </Box>
   )
 }

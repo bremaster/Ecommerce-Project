@@ -2,10 +2,9 @@
 /** @jsx jsx */
 import React, { useState, ChangeEvent } from 'react'
 
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Typography, Box } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
 import { jsx } from '@emotion/core'
 
 import { SquareButton, CloseIcon } from 'atoms'
@@ -59,16 +58,7 @@ const defaultProps: Props = {
   isNewsletter: false,
 }
 
-const useStyles = makeStyles({
-  title: {
-    textTransform: 'none',
-    fontWeight: 700,
-    fontSize: '14px',
-  },
-})
-
 const CouponPaymentForm: React.FC<Props> = (props) => {
-  const classes = useStyles()
   const [coupon, setCoupon] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [trunsactionState, setTransactionState] = useState<undefined | 'running'>(
@@ -77,7 +67,7 @@ const CouponPaymentForm: React.FC<Props> = (props) => {
   const [error, setError] = useState<string>('')
   const { withClickStopSideEffect, setClickableStatus } = usePreventClickMashing()
 
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const { register, handleSubmit, errors } = useForm({
     mode: 'onSubmit',
@@ -105,7 +95,7 @@ const CouponPaymentForm: React.FC<Props> = (props) => {
     })
     const successCallback = (json: { Expires: string; Token: string }) => {
       props.setExpire(json.Expires)
-      history.push(`/product/success?token=${json.Token}`)
+      navigate(`/product/success?token=${json.Token}`)
     }
     try {
       const response = await fetch(reqUrl, {
@@ -139,7 +129,15 @@ const CouponPaymentForm: React.FC<Props> = (props) => {
     <form onSubmit={handleSubmit(openModal)}>
       <Box width="100%" mb={1}>
         {/* TODO: dynamically change collaborator name */}
-        <Typography className={classes.title}>Ploom X CLUB クーポンコード</Typography>
+        <Typography
+          sx={{
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '14px',
+          }}
+        >
+          Ploom X CLUB クーポンコード
+        </Typography>
       </Box>
       <FormRow
         value={coupon}

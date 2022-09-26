@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { Box } from '@mui/material'
+import { Box, CircularProgress } from '@mui/material'
 
-import { SquareButton } from 'atoms'
-import { TermsOfService, Alert, LoadingModal } from 'organisms'
+import { GradientButton, GreyButton } from 'atoms'
+import { TermsOfService, Alert, LoadingModal, Card } from 'organisms'
 import { usePreventClickMashing } from 'utilities/CommonHooks'
 /* import { PaymentIntentResponse } from 'constants/index'; */
 
@@ -93,24 +93,50 @@ export const PaymentFormStripe = ({ clientSecret }: Props): JSX.Element => {
     setClickableStatus('CLICKABLE')
   }
 
+  // payment form state and handler
+  const [isFormReady, setIsFormReady] = useState(false)
+  const [isFormFilled, setIsFormFilled] = useState(false)
+  const handleReadyPaymentElement = (): void => {
+    setIsFormReady(true)
+  }
+  const handleChangePaymentElement = (event: { complete: boolean }): void => {
+    if (event.complete === true) {
+      setIsFormFilled(true)
+    } else {
+      setIsFormFilled(false)
+    }
+  }
+
+  const isButtonDisabled = isLoading || !stripe || !elements || !isFormFilled
+
   return (
     <form id="payment-form">
-      <PaymentElement id="payment-element" />
+      <Card num={2} header="決済情報" width="100%" pb="1rem">
+        {isFormReady === false && (
+          <Box p="1rem" textAlign="center">
+            <CircularProgress />
+          </Box>
+        )}
+        <PaymentElement
+          id="payment-element"
+          onChange={handleChangePaymentElement}
+          onReady={handleReadyPaymentElement}
+        />
+        <Box p="1rem" />
+      </Card>
 
-      <Box width="100%" mt={1} p={3}>
+      <Box width="100%" mt="1rem" p={3} textAlign="center">
         <TermsOfService />
       </Box>
 
       <Box mt={3} pb={5}>
-        <SquareButton
-          buttonType={'primary'}
-          fullWidth={true}
-          type="submit"
-          isDisable={isLoading || !stripe || !elements}
-          onClick={withClickStopSideEffect(handleSubmit)}
-        >
-          決済する
-        </SquareButton>
+        {isButtonDisabled ? (
+          <GreyButton>決済する</GreyButton>
+        ) : (
+          <GradientButton type="submit" onClick={withClickStopSideEffect(handleSubmit)}>
+            決済する
+          </GradientButton>
+        )}
       </Box>
 
       {isLoading && <LoadingModal />}

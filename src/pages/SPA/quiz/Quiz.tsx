@@ -1,32 +1,14 @@
 import React, { useState, useEffect, Fragment } from 'react'
-import { useHistory, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { animated } from 'react-spring'
 import { CssBaseline, Container, Box, Grid, Typography, Fade } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import { AnswerButton } from '../../../atoms/AnswerButton'
-import { AnswerImage } from '../../../atoms/AnswerImage'
-import { BackButton } from '../../../atoms/BackButton'
-import { AnswerCircleGroup } from '../../../organisms/AnswerCircleGroup'
-import {
-  WAIT_TIME_FADE_IN,
-  WAIT_TIME_FADE_OUT,
-} from '../../../container/ProductContainer'
-import { usePreventClickMashing } from '../../../utilities/CommonHooks'
+import { AnswerButton } from 'atoms/AnswerButton'
+import { AnswerImage } from 'atoms/AnswerImage'
+import { BackButton } from 'atoms/BackButton'
+import { AnswerCircleGroup } from 'organisms'
+import { WAIT_TIME_FADE_IN, WAIT_TIME_FADE_OUT } from 'container/ProductContainer'
+import { usePreventClickMashing } from 'utilities/CommonHooks'
 import { AnswerWithHandler } from 'constants/index'
-
-const useStyles = makeStyles({
-  wrapper: {
-    padding: '3rem 0 100px 0',
-    // HACKED!
-    // see https://stackoverflow.com/questions/44645465/when-using-height-100vh-for-the-container-vertical-scrollbar-appears
-    // use 100% when refactoring
-    minHeight: 'calc(100vh - 50px)',
-    position: 'relative',
-    '&  > *:last-child': {
-      marginBottom: '30px',
-    },
-  },
-})
 
 export type QuizProps = {
   quizType: string | null
@@ -43,17 +25,15 @@ export const Quiz = ({
   page,
   tip,
 }: QuizProps): JSX.Element => {
-  const classes = useStyles()
-
   const { pathname } = useLocation()
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const [showQuiz, setShowQuiz] = useState(false)
 
   const { withClickStopSideEffect } = usePreventClickMashing()
 
   const handleBackClicked = withClickStopSideEffect(() => {
-    history.push(`./${page - 1}`)
+    navigate(`./${page - 1}`)
   })
 
   const answersWithHandler = linkToAnswers?.map((answer) => {
@@ -84,7 +64,19 @@ export const Quiz = ({
           <div>
             {/* CAUTION: div ではなく Fragment を↑で利用すると、なぜかフェードアウトが効かなくなるので注意(Mobile) */}
             {/* Box のせい？ */}
-            <Box className={classes.wrapper}>
+            <Box
+              sx={{
+                padding: '3rem 0 100px 0',
+                // HACKED!
+                // see https://stackoverflow.com/questions/44645465/when-using-height-100vh-for-the-container-vertical-scrollbar-appears
+                // use 100% when refactoring
+                minHeight: 'calc(100vh - 50px)',
+                position: 'relative',
+                '&  > *:last-child': {
+                  marginBottom: '30px',
+                },
+              }}
+            >
               <QuizContent
                 showQuiz={showQuiz}
                 quizType={quizType}

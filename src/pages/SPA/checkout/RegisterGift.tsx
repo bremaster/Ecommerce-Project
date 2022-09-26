@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 
-import { useHistory } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  TextField,
   InputLabel,
   Typography,
   Stack,
   SelectChangeEvent,
   ButtonBase,
   Divider,
+  Dialog,
 } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import withStyles from '@mui/styles/withStyles'
 
-import { Checkbox, SquareButton, Switch } from 'atoms'
+import { Checkbox, Switch, GradientButton, GradientOutlinedButton } from 'atoms'
 
 import {
   Alert,
   LoadingModal,
   AuthModal,
   AuthErrorModal,
+  PreviewModal,
   Card,
   ShareLink,
   CheckoutSummary,
   TermsOfService,
+  ShippingRemark,
+  Footer,
 } from 'organisms'
 import { FormRow, PullDownFormRow } from 'molecules'
 import { Layout } from 'templates/Layout'
@@ -35,6 +35,10 @@ import { COLOR } from 'theme'
 import { webAuth } from 'utilities/webAuth'
 import { GiftScene, GIFT_SCENE_LIST } from 'constants/searchForm'
 import { Product } from 'constants/index'
+import { dataLayerPush } from 'utilities/GoogleAnalytics'
+import { checkHalfWidth } from 'utilities/checkHalfWidth'
+
+import { styled } from '@mui/system'
 
 const SKIP_AUTH = process.env.REACT_APP_AUTH0_SKIP_AUTH === 'true'
 
@@ -51,150 +55,70 @@ const SETTING = {
 
 const YEN_MARK = '\xA5'
 
-const useStyles = makeStyles({
-  formRoot: {
-    width: '100%',
-  },
-  radioForm: {
-    '& label': {
-      margin: 0,
-    },
-    '& span': {
-      fontSize: '12px',
-    },
-    '& span.MuiButtonBase-root': {
-      padding: '5px',
-    },
-    '& .Mui-checked': {
-      color: COLOR.primaryNavy,
-    },
-  },
-  messageCount: {
-    paddingTop: '4px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    color: COLOR.brandNameGray,
-    '& p': {
-      textAlign: 'end',
-      fontSize: '12px',
-      letterSpacing: '1px',
-      marginBottom: 0,
-    },
-  },
-  messageInvalid: {
-    color: COLOR.alertRed,
-  },
-  section: {
-    fontSize: '16px',
-    fontWeight: 700,
-  },
-  caution: {
+const MessageCount = styled(Box)({
+  paddingTop: '4px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  color: COLOR.brandNameGray,
+  '& p': {
+    textAlign: 'end',
     fontSize: '12px',
-    fontWeight: 400,
-    letterSpacing: 0,
-    marginTop: '10px',
-  },
-  instruction: {
-    backgroundColor: COLOR.primaryNavy,
-    borderRadius: '5px',
-    padding: '1rem 1rem 0 1rem',
-    color: COLOR.textWhite,
-    fontSize: '14px',
-    marginBottom: '3rem',
-    '& > p': {
-      color: COLOR.textWhite,
-      padding: '0 1rem 1rem 0',
-      lineHeight: 'normal',
-    },
-  },
-  checkboxForm: {
-    '& svg': {
-      color: '#FE8B7B',
-    },
-    '& .MuiFormControlLabel-label': {
-      fontFamily: "'Noto Sans JP'",
-      fontStyle: 'normal',
-      fontWeight: 400,
-      fontSize: '12px',
-      lineHeight: '270%',
-      letterSpacing: '0.03em',
-      color: '#4A4A4A',
-    },
-    '& .Mui-checked': {
-      color: '#FE8B7B',
-    },
-    '& .MuiIconButton-colorSecondary:hover': {
-      // change opacity
-      backgroundColor: `#FE8B7B11`,
-    },
-  },
-  price: {
-    fontFamily: "'Noto Sans JP'",
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '10px',
-    lineHeight: '150%',
-    letterSpacing: '0.03em',
-    color: '#4A4A4A',
-    marginBottom: '5px',
-  },
-  priceValue: {
-    fontFamily: "'Outfit'",
-    fontStyle: 'normal',
-    fontWeight: 600,
-    fontSize: '20px',
-    lineHeight: '25px',
-    letterSpacing: '0.05em',
-    color: '#4A4A4A',
-    marginBottom: '10px',
-  },
-  priceMemo: {
-    fontFamily: "'Noto Sans JP'",
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '12px',
-    lineHeight: '17px',
-    color: '#4A4A4A',
-  },
-  priceLink: {
-    fontFamily: "'Noto Sans JP'",
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '12px',
-    lineHeight: '17px',
-    textDecorationLine: 'underline',
-    color: '#FE8B7B',
-    cursor: 'pointer',
+    letterSpacing: '1px',
+    marginBottom: 0,
   },
 })
 
-const MessageField = withStyles({
-  root: {
-    '& .MuiFilledInput-root': {
-      backgroundColor: '#F7F7F7',
-      padding: '12px 10px',
-      borderRadius: '10px',
-    },
-    '& label.Mui-focused': {
-      color: '#F7F7F7',
-    },
-    '& .MuiFilledInput-multiline': {
-      padding: '10px',
-    },
-    '& .MuiInputBase-inputMultiline': {
-      fontSize: '16px',
-    },
-    '& .MuiFilledInput-root:hover:not(.Mui-disabled):before': {
-      borderBottom: 'none',
-    },
-    '& .MuiFilledInput-underline:before': {
-      borderBottom: 'none',
-    },
-    '& .MuiFilledInput-underline:after': {
-      borderBottom: 'none',
-    },
-  },
-})(TextField)
+const Price = styled(Typography)({
+  fontFamily: "'Noto Sans JP'",
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: '10px',
+  lineHeight: '150%',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  marginBottom: '5px',
+})
+
+const PriceValue = styled(Typography)({
+  fontFamily: "'Outfit'",
+  fontStyle: 'normal',
+  fontWeight: 600,
+  fontSize: '20px',
+  lineHeight: '25px',
+  letterSpacing: '0.05em',
+  color: '#4A4A4A',
+  marginBottom: '10px',
+})
+
+const PriceMemo = styled(Typography)({
+  fontFamily: "'Noto Sans JP'",
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: '12px',
+  lineHeight: '17px',
+  color: '#4A4A4A',
+})
+
+const PriceLink = styled('span')({
+  fontFamily: "'Noto Sans JP'",
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: '12px',
+  lineHeight: '17px',
+  textDecorationLine: 'underline',
+  color: '#FE8B7B',
+  cursor: 'pointer',
+})
+
+const PreviewButton = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  lineHeight: '43px',
+  letterSpacing: '0.03em',
+  textDecoration: 'underline',
+  width: '100%',
+  marginTop: '18px',
+  cursor: 'pointer',
+})
 
 export type Props = {
   sender: {
@@ -240,12 +164,23 @@ export const RegisterGift: React.FC<Props> = ({
   scenesInCart,
   itemsInCart,
 }: Props) => {
-  const { register, handleSubmit, errors } = useForm({
-    mode: 'onSubmit',
-    reValidateMode: 'onBlur',
+  const emailtype =
+    /^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/
+
+  const [errors, setErrors] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    message: '',
+    isNewsletter: '',
+    naire3rd: '',
+    naire2st: '',
+    naire1st: '',
+    selection: '',
+    recipientName: '',
   })
 
-  const history = useHistory()
+  const navigate = useNavigate()
 
   // Noshi is japanese gift wrapping. useNoshi determines wrapping config.
   const noshi = useNoshi(itemsInCart, scenesInCart)
@@ -275,13 +210,14 @@ export const RegisterGift: React.FC<Props> = ({
       : setIsMessageInvalid(false)
   }, [sender.message])
 
-  // check access_token on mount
+  // check access_token, link created or not, temp sender
   useEffect(() => {
-    if (window.location.hash.indexOf('access_token') > -1) {
-      if (!!tempPrevSender) {
-        const prevSender: SenderType = JSON.parse(tempPrevSender)
-        onSubmit(prevSender)
-      }
+    const hasAccessToken = window.location.hash.indexOf('access_token') > -1
+    // Prevent gift links from being created when a user comes via browser back
+    const isAuthenticated = linkCreatedStatus.get() === 'AUTH_REQUESTED'
+    if (hasAccessToken && isAuthenticated && !!tempPrevSender) {
+      const prevSender: SenderType = JSON.parse(tempPrevSender)
+      onSubmit(prevSender)
     }
   }, [])
 
@@ -289,6 +225,10 @@ export const RegisterGift: React.FC<Props> = ({
     undefined
   )
   const [error, setError] = useState<string>('')
+
+  const [showShippingMore, setShowShippingMore] = useState(false)
+
+  const [resend, setResend] = useState(false)
 
   const onSubmit = async (payload: SenderType) => {
     setTransactionState('running')
@@ -307,7 +247,10 @@ export const RegisterGift: React.FC<Props> = ({
     })
     const successCallback = (json: { Expires: string; Token: string }) => {
       setExpire(json.Expires)
-      history.push(`/product/success?token=${json.Token}`)
+      // push event to data layer
+      dataLayerPush({ event: 'link created', cardToken: json.Token })
+      linkCreatedStatus.set('CREATED')
+      navigate(`/product/success?token=${json.Token}`)
     }
     try {
       const response = await fetch(reqUrl, {
@@ -334,18 +277,37 @@ export const RegisterGift: React.FC<Props> = ({
     }
   }
 
-  const handleOpen = () => {
-    sessionStorage.removeItem('sender')
+  const handleOpen = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const errorFlag = validationSubmit()
 
-    if (SKIP_AUTH) {
-      skipLogin()
-      return
+    if (!errorFlag) {
+      sessionStorage.removeItem('sender')
+      dataLayerPush({
+        event: 'create link info submitted',
+        totalPriceRange: `${minPriceInAll} - ${maxPriceInAll}`,
+        numberOfGifts: itemsInCart.length,
+        sceneSelected: noshi.noshiScene.value,
+        noshiApplied: noshi.isNoshi,
+        noshiTypeSelected: noshi.noshigamiId,
+      })
+
+      if (SKIP_AUTH) {
+        skipLogin()
+        return
+      }
+      requestCode()
+      setOpen(true)
+    } else {
+      const errorElement = document.getElementById(`title_${errorFlag}`)
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
-    requestCode()
-    setOpen(true)
   }
 
   const requestCode = () => {
+    linkCreatedStatus.set('AUTH_REQUESTED')
     webAuth.passwordlessStart(
       {
         connection: 'email',
@@ -354,7 +316,7 @@ export const RegisterGift: React.FC<Props> = ({
       },
       function (err: unknown) {
         if (err) {
-          onError()
+          onAuthError()
         }
 
         saveSender()
@@ -362,7 +324,7 @@ export const RegisterGift: React.FC<Props> = ({
     )
   }
 
-  const onError = () => {
+  const onAuthError = () => {
     setErrorOpen(true)
   }
 
@@ -381,14 +343,308 @@ export const RegisterGift: React.FC<Props> = ({
     sessionStorage.setItem('sender', JSON.stringify(senderToBeSaved))
   }
 
+  const savePreviewData = () => {
+    const previewData = {
+      to: sender.recipientName,
+      from: sender.name,
+      message: sender.message,
+      itemsInCart: itemsInCart,
+    }
+    localStorage.setItem('previewData', JSON.stringify(previewData))
+  }
+
   const skipLogin = () => {
+    linkCreatedStatus.set('AUTH_REQUESTED')
     alert('Auth process is skipped. More detail is written in README')
     saveSender()
     location.href = '/product/checkout#access_token=testtoken'
     location.reload()
   }
 
-  const classes = useStyles()
+  const validationSubmit = () => {
+    let flag
+    let tempError = Object.assign(errors)
+
+    if (!sender.recipientName || sender.recipientName == '') {
+      tempError = {
+        ...tempError,
+        recipientName: '必須項目を入力してください',
+      }
+      if (!flag) flag = 'recipientName'
+    }
+
+    if (message == '') {
+      tempError = {
+        ...tempError,
+        message: '必須項目を入力してください',
+      }
+      if (!flag) flag = 'message'
+    }
+
+    if (noshi.isNoshi) {
+      if (noshi.noshiScene.value == '') {
+        tempError = {
+          ...tempError,
+          selection: '必須項目を入力してください',
+        }
+        if (!flag) flag = 'selection'
+      }
+
+      if (noshi.naire.nameList[0] == '') {
+        tempError = {
+          ...tempError,
+          naire1st: '必須項目を入力してください',
+        }
+        if (!flag) flag = 'naire1st'
+      }
+
+      if (noshi.naire.amount >= 2) {
+        if (noshi.naire.nameList[1] == '') {
+          tempError = {
+            ...tempError,
+            naire2st: '必須項目を入力してください',
+          }
+          if (!flag) flag = 'naire2st'
+        }
+      }
+
+      if (noshi.naire.amount == 3) {
+        if (noshi.naire.nameList[2] == '') {
+          tempError = {
+            ...tempError,
+            naire3rd: '必須項目を入力してください',
+          }
+          if (!flag) flag = 'naire3rd'
+        }
+      }
+    }
+
+    if (name == '') {
+      tempError = {
+        ...tempError,
+        name: '必須項目を入力してください',
+      }
+      if (!flag) flag = 'name'
+    }
+
+    if (!emailtype.test(email ? email : '')) {
+      tempError = {
+        ...tempError,
+        email: '正しいメールアドレスを入力してください',
+      }
+      if (!flag) flag = 'email'
+    }
+
+    if (email == '') {
+      tempError = {
+        ...tempError,
+        email: '必須項目を入力してください',
+      }
+      if (!flag) flag = 'email'
+    }
+
+    if (phone) {
+      if (phone?.length > 11) {
+        tempError = {
+          ...tempError,
+          phone: '10桁または11桁で入力してください',
+        }
+        if (!flag) flag = 'phone'
+      }
+    }
+
+    if (!checkHalfWidth(phone)) {
+      tempError = {
+        ...tempError,
+        phone: '半角数字のみで入力してください',
+      }
+      if (!flag) flag = 'phone'
+    }
+
+    if (phone == '') {
+      tempError = {
+        ...tempError,
+        phone: '必須項目を入力してください',
+      }
+      if (!flag) flag = 'phone'
+    }
+
+    setErrors(tempError)
+    return flag
+  }
+
+  const validation = (
+    e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement> | SelectChangeEvent<string>
+  ) => {
+    let flag = 0
+    if (e.target.name == 'message') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'phone') {
+      if (!checkHalfWidth(e.target.value)) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '半角数字のみで入力してください',
+        })
+        flag++
+      }
+      if (
+        !(e.target.value.length == 11 || e.target.value.length == 10) ||
+        !/^-?\d+$/.test(e.target.value)
+      ) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '10桁または11桁で入力してください',
+        })
+        flag++
+      }
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'email') {
+      if (!emailtype.test(e.target.value)) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '正しいメールアドレスを入力してください',
+        })
+        flag++
+      }
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'name') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'recipientName') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'selection') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'naire1st') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'naire2st') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+
+    if (e.target.name == 'naire3rd') {
+      if (e.target.value === '') {
+        setErrors({
+          ...errors,
+          [e.target.name]: '必須項目を入力してください',
+        })
+        flag++
+      }
+      if (flag == 0) {
+        setErrors({
+          ...errors,
+          [e.target.name]: '',
+        })
+      }
+    }
+  }
 
   // カーソルが真ん中あたりに来ることがあるので
   useEffect(() => {
@@ -396,344 +652,368 @@ export const RegisterGift: React.FC<Props> = ({
   }, [])
 
   return (
-    <Layout maxWidth="md">
-      <PageTitle />
+    <>
+      <Layout maxWidth="md">
+        <PageTitle />
 
-      <Box mb="56px">
-        <ShareLink />
-      </Box>
+        <Box mb="56px">
+          <ShareLink />
+        </Box>
 
-      <form onSubmit={handleSubmit(handleOpen)} className={classes.formRoot}>
-        {itemsInCart.length > 0 && (
-          <Card header="選んだギフト" num={1} mb="70px">
-            {itemsInCart.map((item, idx) => (
-              <Box key={item.sys.id} mb="2rem">
-                {idx > 0 && (
-                  <Divider
-                    sx={{
-                      display: { xs: 'none', md: 'block' },
-                      borderColor: '#CFCAC4',
-                      mb: '1.5rem',
+        <form onSubmit={handleOpen} style={{ width: '100%' }}>
+          {itemsInCart.length > 0 && (
+            <Card header="選んだギフト" num={1} mb="70px">
+              {itemsInCart.map((item, idx) => (
+                <Box key={item.sys.id} mb="2rem">
+                  {idx > 0 && (
+                    <Divider
+                      sx={{
+                        display: { xs: 'none', md: 'block' },
+                        borderColor: '#CFCAC4',
+                        mb: '1.5rem',
+                      }}
+                    />
+                  )}
+                  <CheckoutSummary
+                    itemSummary={{
+                      img: item.productImageCloudinary[0].secure_url,
+                      brand: item.brand.brandName,
+                      itemName: item.title,
+                      isNoshi: item.noshi,
+                    }}
+                    priceTable={{
+                      productPrice: item.productPrice,
+                      minShipping: item.shippingFee.minFee,
+                      maxShipping: item.shippingFee.maxFee,
                     }}
                   />
-                )}
-                <CheckoutSummary
-                  itemSummary={{
-                    img: item.productImageCloudinary[0].secure_url,
-                    brand: item.brand.brandName,
-                    itemName: item.title,
-                    isNoshi: item.noshi,
+                </Box>
+              ))}
+              <Divider sx={{ borderColor: '#CFCAC4', mb: '1.5rem' }} />
+              <Box textAlign={{ sm: 'left', md: 'right' }} mb="1rem">
+                <Price>お支払い予定金額(税込)</Price>
+                <PriceValue>
+                  {minPriceInAll === maxPriceInAll
+                    ? YEN_MARK + minPriceInAll.toLocaleString('en-US')
+                    : `${YEN_MARK + minPriceInAll.toLocaleString('en-US')} ～ ${
+                        YEN_MARK + maxPriceInAll.toLocaleString('en-US')
+                      }`}
+                </PriceValue>
+                <PriceMemo
+                  onClick={() => {
+                    setShowShippingMore(true)
                   }}
-                  priceTable={{
-                    productPrice: item.productPrice,
-                    minShipping: item.shippingFee.minFee,
-                    maxShipping: item.shippingFee.maxFee,
-                  }}
-                />
-              </Box>
-            ))}
-            <Divider sx={{ borderColor: '#CFCAC4', mb: '1.5rem' }} />
-            <Box textAlign={{ sm: 'left', md: 'right' }} mb="1rem">
-              <Typography className={classes.price}>お支払い予定金額(税込)</Typography>
-              <Typography className={classes.priceValue}>
-                {minPriceInAll === maxPriceInAll
-                  ? YEN_MARK + minPriceInAll.toLocaleString('en-US')
-                  : `${YEN_MARK + minPriceInAll.toLocaleString('en-US')} ～ ${
-                      YEN_MARK + maxPriceInAll.toLocaleString('en-US')
-                    }`}
-              </Typography>
-              <Typography className={classes.priceMemo}>
-                ※北海道・沖縄・離島・一部地域の送料に関しては
-                <span
-                  className={classes.priceLink}
-                  onClick={() =>
-                    alert(
-                      JSON.stringify(
-                        itemsInCart.map((item) => ({
-                          ID: item.title.slice(0, 15),
-                          沖縄: item.shippingFee.okinawaFee + ' YEN',
-                          北海道: item.shippingFee.hokkaidoFee + ' YEN',
-                          '配送不可地域（複数値）': item.shippingFee.undeliverable,
-                        })),
-                        null,
-                        4
-                      )
-                    )
-                  }
                 >
-                  こちら
-                </span>
-              </Typography>
-            </Box>
-          </Card>
-        )}
-
-        <Card header="メッセージを入力する" num={2} mb="70px">
-          <FormRow
-            label="宛名"
-            value={sender.recipientName}
-            onChange={sender.onChangeRecipientName}
-            type="text"
-            id="recipientName"
-            register={() => ({
-              required: true,
-            })}
-            invalid={!!errors.recipientName}
-            errorMessage="宛名に誤りがあります。"
-            placeholder="例）山田太郎"
-          />
-          <Box textAlign="start">
-            <InputLabel
-              shrink
-              htmlFor="message"
-              sx={{
-                color: '#4A4A4A',
-                fontFamily: "'Noto Sans JP'",
-                fontStyle: 'normal',
-                fontWeight: 400,
-                fontSize: '16px',
-                marginBottom: '0',
-                lineHeight: '32px',
-              }}
-            >
-              メッセージ
-            </InputLabel>
-            <MessageField
-              id="message"
-              placeholder="お相手へのメッセージを入力してください"
-              multiline
-              rows={4}
-              fullWidth
-              defaultValue={sender.message}
-              variant="filled"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                sender.setMessage(e.target.value)
-              }
-            />
-          </Box>
-          <Box mb="24px" className={classes.messageCount}>
-            <p>300文字以内</p>
-            <Box>
-              <p>{sender.message.length} / 300</p>
-              {isMessageInvalid ? (
-                <p className={classes.messageInvalid}>300文字を超えています</p>
-              ) : undefined}
-            </Box>
-          </Box>
-          <Box>
-            {!noshi.isNoshiNGAtAll && (
-              <Box mb="24px">
-                <InputLabel
-                  shrink
+                  ※北海道・沖縄・離島・一部地域の送料に関しては
+                  <PriceLink>こちら</PriceLink>
+                </PriceMemo>
+                <Dialog
+                  open={showShippingMore}
+                  onClose={() => setShowShippingMore(false)}
                   sx={{
-                    color: '#4A4A4A',
+                    '& .MuiPaper-root': {
+                      borderRadius: '10px',
+                      margin: '24px',
+                    },
+                  }}
+                >
+                  <Box p="24px">
+                    <ShippingRemark
+                      items={itemsInCart.map((item) => ({
+                        itemName: item.title,
+                        hokkaidoFee: item.shippingFee.hokkaidoFee,
+                        okinawaFee: item.shippingFee.okinawaFee,
+                        undeliverableSites:
+                          item.shippingFee.undeliverable === null
+                            ? []
+                            : item.shippingFee.undeliverable,
+                      }))}
+                    />
+                    <Box mt="24px">
+                      <GradientOutlinedButton onClick={() => setShowShippingMore(false)}>
+                        閉じる
+                      </GradientOutlinedButton>
+                    </Box>
+                  </Box>
+                </Dialog>
+              </Box>
+            </Card>
+          )}
+
+          <Card header="メッセージを入力する" num={2} mb="70px">
+            <FormRow
+              label="宛名"
+              value={sender.recipientName}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                validation(e)
+                sender.onChangeRecipientName(e)
+              }}
+              type="text"
+              id="recipientName"
+              required={true}
+              invalid={!!errors.recipientName}
+              errorMessage={errors.recipientName}
+              placeholder="例）山田太郎"
+            />
+            <Box textAlign="start">
+              <FormRow
+                label="メッセージ"
+                value={sender.message}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (e.target.value.length <= 300) {
+                    validation(e)
+                    sender.setMessage(e.target.value)
+                  }
+                }}
+                type="text"
+                id="message"
+                required={true}
+                multiline
+                rows={4}
+                invalid={!!errors.message}
+                errorMessage={errors.message}
+                placeholder="お相手へのメッセージを入力してください"
+              />
+            </Box>
+            <MessageCount mb="24px">
+              <p>300文字以内</p>
+              <Box>
+                <p>{sender.message.length} / 300</p>
+                {isMessageInvalid ? (
+                  <p style={{ color: COLOR.alertRed }}>300文字を超えています</p>
+                ) : undefined}
+              </Box>
+            </MessageCount>
+            <Box>
+              {!noshi.isNoshiNGAtAll && (
+                <Box mb="24px">
+                  <InputLabel
+                    shrink
+                    sx={{
+                      color: '#4A4A4A',
+                      fontFamily: "'Noto Sans JP'",
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      fontSize: '16px',
+                      marginBottom: '0',
+                      lineHeight: '32px',
+                    }}
+                  >
+                    熨斗の有無
+                  </InputLabel>
+                  <Switch checked={noshi.isNoshi} onChange={noshi.onChangeNoshiToggle} />
+                </Box>
+              )}
+              {noshi.isNoshi === true && (
+                <PullDownFormRow
+                  label="熨斗の種類選択"
+                  value={noshi.noshiScene.value as string}
+                  items={noshi.noshiScene.options as string[]}
+                  onChange={(e) => {
+                    validation(e)
+                    noshi.onChangeNoshiScene(e)
+                  }}
+                  register={null}
+                  placeholder="熨斗を選択してください"
+                  errorMessage={errors.selection}
+                  required={true}
+                  id="selection"
+                  invalid={!!errors.selection}
+                />
+              )}
+            </Box>
+            {noshi.noshigamiId !== 0 && (
+              <>
+                {/* show up to 3 input forms */}
+                <FormRow
+                  label="熨斗に入れるお名前"
+                  value={noshi.naire.nameList[0]}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    validation(e)
+                    noshi.onChangeNaire1st(e)
+                  }}
+                  type="text"
+                  id="naire1st"
+                  required={true}
+                  invalid={!!errors.naire1st}
+                  errorMessage={errors.naire1st}
+                  placeholder="例）山田太郎"
+                  mb="8px"
+                />
+                {noshi.naire.amount >= 2 && (
+                  <FormRow
+                    label="熨斗に入れるお名前"
+                    value={noshi.naire.nameList[1]}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      validation(e)
+                      noshi.onChangeNaire2nd(e)
+                    }}
+                    type="text"
+                    id="naire2st"
+                    required={true}
+                    invalid={!!errors.naire2st}
+                    errorMessage="熨斗に入れるお名前は入力必須です"
+                    placeholder="例）山田太郎"
+                    mb="8px"
+                  />
+                )}
+                {noshi.naire.amount === 3 && (
+                  <FormRow
+                    label="熨斗に入れるお名前"
+                    value={noshi.naire.nameList[2]}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      validation(e)
+                      noshi.onChangeNaire3rd(e)
+                    }}
+                    type="text"
+                    id="naire3rd"
+                    required={true}
+                    invalid={!!errors.naire3rd}
+                    errorMessage="熨斗に入れるお名前は入力必須です"
+                    placeholder="例）山田太郎"
+                    mb="8px"
+                  />
+                )}
+                <AddNameButton onClick={noshi.onClickAppendNaire} />
+                <Box
+                  sx={{
+                    mt: '0.5rem',
                     fontFamily: "'Noto Sans JP'",
                     fontStyle: 'normal',
                     fontWeight: 400,
-                    fontSize: '16px',
-                    marginBottom: '0',
-                    lineHeight: '32px',
+                    fontSize: '12px',
+                    letterSpacing: '0.03em',
+                    color: '#4A4A4A',
+                    lineHeight: 'normal',
                   }}
                 >
-                  熨斗の有無
-                </InputLabel>
-                <Switch checked={noshi.isNoshi} onChange={noshi.onChangeNoshiToggle} />
-              </Box>
+                  {noshi.naireCaution}
+                </Box>
+              </>
             )}
-            {noshi.isNoshi === true && (
-              <PullDownFormRow
-                label="熨斗の種類選択"
-                value={noshi.noshiScene.value as string}
-                items={noshi.noshiScene.options as string[]}
-                onChange={noshi.onChangeNoshiScene}
-                register={null}
-                placeholder="熨斗を選択してください"
-                invalid={false}
-                errorMessage="熨斗の種類が適切ではありません"
-              />
-            )}
-          </Box>
-          {noshi.noshigamiId !== 0 && (
-            <>
-              <InputLabel
-                shrink
-                sx={{
-                  color: '#4A4A4A',
-                  fontFamily: "'Noto Sans JP'",
-                  fontStyle: 'normal',
-                  fontWeight: 400,
-                  fontSize: '16px',
-                  marginBottom: '0',
-                  lineHeight: '32px',
-                }}
-              >
-                熨斗に入れるお名前
-              </InputLabel>
-              {/* show up to 3 input forms */}
-              <FormRow
-                label=""
-                value={noshi.naire.nameList[0]}
-                onChange={noshi.onChangeNaire1st}
-                type="text"
-                id="naire1st"
-                register={() => ({
-                  required: false,
-                })}
-                invalid={false}
-                errorMessage="お名前に誤りがあります。"
-                placeholder="例）山田太郎"
-                mb="8px"
-              />
-              {noshi.naire.amount >= 2 && (
-                <FormRow
-                  label=""
-                  value={noshi.naire.nameList[1]}
-                  onChange={noshi.onChangeNaire2nd}
-                  type="text"
-                  id="naire2nd"
-                  register={() => ({
-                    required: false,
-                  })}
-                  invalid={false}
-                  errorMessage="お名前に誤りがあります。"
-                  placeholder="例）山田太郎"
-                  mb="8px"
-                />
-              )}
-              {noshi.naire.amount === 3 && (
-                <FormRow
-                  label=""
-                  value={noshi.naire.nameList[2]}
-                  onChange={noshi.onChangeNaire3rd}
-                  type="text"
-                  id="naire3rd"
-                  register={() => ({
-                    required: false,
-                  })}
-                  invalid={false}
-                  errorMessage="お名前に誤りがあります。"
-                  placeholder="例）山田太郎"
-                  mb="8px"
-                />
-              )}
-              <AddNameButton onClick={noshi.onClickAppendNaire} />
+            {noshi.noshigamiId !== 0 && (
               <Box
-                sx={{
-                  mt: '0.5rem',
-                  fontFamily: "'Noto Sans JP'",
-                  fontStyle: 'normal',
-                  fontWeight: 400,
-                  fontSize: '12px',
-                  letterSpacing: '0.03em',
-                  color: '#4A4A4A',
-                  lineHeight: 'normal',
-                }}
+                px="3rem"
+                py="1rem"
+                mt="1rem"
+                borderRadius="10px"
+                border="1px solid #CFCAC4"
               >
-                {noshi.naireCaution}
+                <img
+                  src={`/assets/noshigami/Noshi_${noshi.noshigamiId}.svg`}
+                  alt="noshigami"
+                />
               </Box>
-            </>
-          )}
-          {noshi.noshigamiId !== 0 && (
-            <Box
-              px="3rem"
-              py="1rem"
-              mt="1rem"
-              borderRadius="10px"
-              border="1px solid #CFCAC4"
-            >
-              <img
-                src={`/assets/noshigami/Noshi_${noshi.noshigamiId}.svg`}
-                alt="noshigami"
+            )}
+          </Card>
+
+          <Card header="贈り主情報" num={3}>
+            <FormRow
+              label="お名前"
+              value={sender.name}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                validation(e)
+                sender.onChangeName(e)
+              }}
+              type="text"
+              id="name"
+              required={true}
+              invalid={!!errors.name}
+              errorMessage="お名前は入力必須です"
+              placeholder="例）山田太郎"
+            />
+            <FormRow
+              label="メールアドレス"
+              value={sender.email}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                validation(e)
+                sender.onChangeEmail(e)
+              }}
+              type="email"
+              id="email"
+              required={true}
+              invalid={!!errors.email}
+              errorMessage={errors.email}
+              placeholder="例）zeft@com"
+            />
+            <FormRow
+              label="電話番号(ハイフンなし)"
+              value={sender.phone}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                if (/^[0-9]+$/.test(e.target.value) || e.target.value.length === 0) {
+                  if (e.target.value.length < 12) {
+                    validation(e)
+                    sender.onChangePhone(e)
+                  }
+                }
+              }}
+              type="tel"
+              id="phone"
+              required={true}
+              invalid={!!errors.phone}
+              errorMessage={errors.phone}
+              placeholder="例）01234567890"
+            />
+            <Box sx={{ display: 'grid', placeItems: 'center' }}>
+              <Checkbox
+                label="最新情報やお知らせなどを受け取る"
+                checked={sender.isNewsletter}
+                onClick={sender.toggleNewsLetter}
               />
             </Box>
-          )}
-        </Card>
+          </Card>
 
-        <Card header="贈り主情報" num={3}>
-          <FormRow
-            label="お名前"
-            value={sender.name}
-            onChange={sender.onChangeName}
-            type="text"
-            id="senderName"
-            register={() => ({
-              required: true,
-            })}
-            invalid={!!errors.senderName}
-            errorMessage="お名前に誤りがあります。"
-            placeholder="例）山田太郎"
-          />
-          <FormRow
-            label="メールアドレス"
-            value={sender.email}
-            onChange={sender.onChangeEmail}
-            type="email"
-            id="senderEmail"
-            register={register({
-              required: true,
-              pattern: /^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/,
-            })}
-            invalid={!!errors.senderEmail}
-            errorMessage="メールアドレスに誤りがあります。"
-            placeholder="例）zeft@com"
-          />
-          <FormRow
-            label="電話番号(ハイフンなし)"
-            value={sender.phone}
-            onChange={sender.onChangePhone}
-            type="tel"
-            id="senderPhone"
-            register={register({
-              required: true,
-              pattern: /^[0-9]{10,11}$/,
-            })}
-            invalid={!!errors.senderPhone}
-            errorMessage="電話番号に誤りがあります。"
-            placeholder="例）01234567890"
-          />
-          <Box sx={{ display: 'grid', placeItems: 'center' }}>
-            <Checkbox
-              label="最新情報やお知らせなどを受け取る"
-              checked={sender.isNewsletter}
-              onClick={sender.toggleNewsLetter}
+          <Box display="grid" sx={{ placeItems: 'center' }}>
+            <Box p="2rem">
+              <TermsOfService />
+            </Box>
+          </Box>
+
+          <Box mt="1rem" mb="4rem">
+            {/* this button fires form's submit event */}
+            <GradientButton type="submit">ギフトリンクを発行する</GradientButton>
+
+            <PreviewModal
+              button={
+                <PreviewButton
+                  color="#FE8B7B"
+                  align="center"
+                  fontSize={16}
+                  fontWeight={700}
+                >
+                  貰い手の表示を確認する ↗
+                </PreviewButton>
+              }
+              savePreviewData={savePreviewData}
             />
           </Box>
-        </Card>
+        </form>
+        {trunsactionState === 'running' && (
+          <LoadingModal message="完了まで少々お待ちください。" />
+        )}
+        {error && <Alert message={error} handleClose={() => setError('')} />}
 
-        <Box display="grid" sx={{ placeItems: 'center' }}>
-          <Box p="2rem">
-            <TermsOfService />
-          </Box>
-        </Box>
+        <AuthModal
+          open={open}
+          setOpen={setOpen}
+          sender={{
+            email: sender.email || '',
+          }}
+          requestCode={requestCode}
+          onError={onAuthError}
+          resend={resend}
+          setResend={setResend}
+        />
 
-        <Box mt="1rem" mb="4rem">
-          {/* this button fires form's submit event */}
-          <SquareButton buttonType="primary" type="submit" fullWidth>
-            ギフトリンクを発行する
-          </SquareButton>
-        </Box>
-      </form>
-      {trunsactionState === 'running' && (
-        <LoadingModal message="完了まで少々お待ちください。" />
-      )}
-      {error && <Alert message={error} handleClose={() => setError('')} />}
-
-      <AuthModal
-        open={open}
-        setOpen={setOpen}
-        sender={{
-          email: sender.email || '',
-        }}
-        requestCode={requestCode}
-        onError={onError}
-      />
-
-      <AuthErrorModal
-        open={erroropen}
-        setOpen={setErrorOpen}
-        setVerifyModalOpen={setOpen}
-      />
-    </Layout>
+        <AuthErrorModal
+          open={erroropen}
+          setOpen={setErrorOpen}
+          setVerifyModalOpen={setOpen}
+          setResend={setResend}
+        />
+      </Layout>
+      <Footer isMinimal={true} />
+    </>
   )
 }
 
@@ -799,7 +1079,10 @@ const AddNameButton = (props: { onClick: () => void }) => {
 }
 
 function useNoshi(itemsInCart: Array<Product>, scenesInCart: Array<GiftScene>) {
-  const isNoshiNGAtAll = itemsInCart.every((item) => item.noshi === false)
+  // Remove noshi when all item is noshi NG or specific scene
+  const isNoshiNGAtAll =
+    itemsInCart.every((item) => item.noshi === false) ||
+    scenesInCart.every((scene) => scene === '誕生日' || scene === 'お礼')
   const noshiSceneInitialized = isNoshiNGAtAll
     ? { value: '', options: [], noshiOn: false }
     : calcSceneForNoshi(scenesInCart)
@@ -885,26 +1168,28 @@ function useNoshi(itemsInCart: Array<Product>, scenesInCart: Array<GiftScene>) {
   }
 }
 
-export function calcSceneForNoshi(
-  scenes: Array<GiftScene>
-): {
+export function calcSceneForNoshi(scenes: Array<GiftScene>): {
   value: GiftScene | ''
   options: Array<GiftScene>
   noshiOn: boolean
 } {
-  const ALL_FLAG = 'すべてのギフト'
+  const SCENES_NOT_SUITABLE_FOR_NOSHI = ['すべてのギフト', 'お礼', '誕生日']
   const init = {
     value: '',
-    options: GIFT_SCENE_LIST.filter((scene) => scene !== ALL_FLAG),
+    options: GIFT_SCENE_LIST.filter(
+      (scene) => !SCENES_NOT_SUITABLE_FOR_NOSHI.includes(scene)
+    ),
     noshiOn: false,
   }
 
-  if (scenes.every((scene) => scene === ALL_FLAG)) {
+  if (scenes.every((scene) => SCENES_NOT_SUITABLE_FOR_NOSHI.includes(scene))) {
     return init
   }
 
-  if (scenes.some((scene) => scene === ALL_FLAG)) {
-    const scenesFiltered = scenes.filter((scene) => scene !== ALL_FLAG)
+  if (scenes.some((scene) => SCENES_NOT_SUITABLE_FOR_NOSHI.includes(scene))) {
+    const scenesFiltered = scenes.filter(
+      (scene) => !SCENES_NOT_SUITABLE_FOR_NOSHI.includes(scene)
+    )
     const scenesUnique = Array.from(new Set(scenesFiltered))
     if (scenesUnique.length === 1) {
       return {
@@ -969,4 +1254,11 @@ function calcMinAndMaxPrice(
     ...items.map((item) => item.productPrice + item.shippingFee.maxFee)
   )
   return [min, max]
+}
+
+// Prevent gift links from being created when a user browses back
+const linkCreatedStatus = {
+  get: () => sessionStorage.getItem('linkCreatedStatus'),
+  set: (status: 'CREATED' | 'AUTH_REQUESTED') =>
+    sessionStorage.setItem('linkCreatedStatus', status),
 }

@@ -1,7 +1,6 @@
 import React, { useRef } from 'react'
 import { Grid, Box, Container, Typography, CssBaseline } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { MenuAppBar } from '../../organisms/MenuAppBar'
 import { SquareButton } from '../../atoms/SquareButton'
@@ -13,7 +12,124 @@ import { optimize } from '../../utilities/Cloudinary'
 import { LpTicker } from './componets/LpTicker'
 import { LpFooter } from './componets/LpFooter'
 
-const useStyles = makeStyles((theme) => ({
+import { styled } from '@mui/system'
+
+const StyledImage = styled(Image)({
+  width: '50%',
+  objectFit: 'cover',
+  borderRadius: '0.5rem',
+  cursor: 'pointer',
+})
+
+const TopContainer = styled(Box)((props) => ({
+  marginLeft: '24px',
+  marginRight: '24px',
+  [props.theme.breakpoints.down('md')]: {
+    margin: '0px',
+  },
+}))
+
+const Top = styled(Box)((props) => ({
+  maxWidth: '1456px',
+  marginRight: 'auto',
+  marginLeft: 'auto',
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  position: 'relative', // for tagLine overlay
+  [props.theme.breakpoints.down('md')]: {
+    marginLeft: '0px',
+    display: 'block',
+    width: '100%',
+  },
+}))
+
+const TopRightSectionCover = styled(Image)({
+  maxWidth: '960px',
+  maxHeight: '500px',
+  width: '100%',
+  objectFit: 'cover',
+  cursor: 'pointer',
+  backgroundImage: `url(https://res.cloudinary.com/zeft/image/upload/q_auto,f_auto,w_auto,c_fill/v1623768795/zeft_landing/top_fw9nyp.png)`,
+  backgroundSize: 'auto auto',
+  backgroundRepeat: 'no-repeat',
+})
+
+const TopLeftSectionTitle = styled(Box)((props) => ({
+  // border: `1px solid  ${COLOR.quizoutlineGray}`,
+  boxShadow: '0 0 0 0 #da0505',
+  fontSize: '20px',
+  lineHeight: 1.2,
+  position: 'absolute',
+  '& b': {
+    fontWeight: 900,
+    lineHeight: 1.5,
+    // color: COLOR.textBlack,  // use default black to avoid low contrast
+  },
+  [props.theme.breakpoints.down('md')]: {
+    lineHeight: 1.43,
+    fontSize: '14px',
+    backgroundColor: COLOR.backgroundWhite,
+    bottom: '2rem', // for tagLine overlay
+    right: '0', // for tagLine overlay
+    width: '240px', // for tagLine overlay
+    zIndex: '2', // for tagLine overlay
+    padding: '0.3rem 0.5rem',
+    marginRight: 0,
+  },
+}))
+
+const TopLeftSectionButton = styled(Box)((props) => ({
+  '& a': {
+    width: '18rem',
+  },
+  marginRight: '24px',
+  marginTop: '180px', // for tagLine overlay
+  [props.theme.breakpoints.down('md')]: {
+    marginTop: '0px', // for tagLine overlay
+    display: 'none',
+  },
+}))
+
+const TopButtomSectionButton = styled(Box)((props) => ({
+  textAlign: 'center',
+  [props.theme.breakpoints.up('md')]: {
+    marginTop: '80px', // for tagLine overlay
+    display: 'none',
+  },
+}))
+
+const ItemImgListSection = styled(Box)({
+  backgroundColor: COLOR.tickerGray,
+  textAlign: 'center',
+})
+
+const UsecaseCard = styled(Box)({
+  '& h6': {
+    padding: '1rem',
+  },
+  '& p': {
+    textAlign: 'left',
+    lineHeight: '1.5rem',
+  },
+})
+
+const DeleteLinkColor = styled(SquareButton)({
+  /* visited link */
+  '&:visited': {
+    color: COLOR.textWhite,
+  },
+  /* mouse over link */
+  '&:hover': {
+    color: COLOR.textWhite,
+  },
+  /* selected link */
+  '&:active': {
+    color: COLOR.textWhite,
+  },
+})
+
+const visibleStyles = {
   visible: {
     transition: '1s',
     opacity: 1,
@@ -22,156 +138,7 @@ const useStyles = makeStyles((theme) => ({
     transition: '1s',
     opacity: 0,
   },
-  centerlizer: {
-    textAlign: 'center',
-  },
-  img: {
-    width: '50%',
-    objectFit: 'cover',
-    /* aspectRatio: '1', */
-    borderRadius: '0.5rem',
-    // border: `1px solid ${COLOR.quizoutlineGray}`,
-    cursor: 'pointer',
-  },
-  topContainer: {
-    marginLeft: '24px',
-    marginRight: '24px',
-    [theme.breakpoints.down('md')]: {
-      margin: '0px',
-    },
-  },
-  top: {
-    maxWidth: '1456px',
-    marginRight: 'auto',
-    marginLeft: 'auto',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    position: 'relative', // for tagLine overlay
-    [theme.breakpoints.down('md')]: {
-      marginLeft: '0px',
-      display: 'block',
-      width: '100%',
-    },
-  },
-  topRightSectionCover: {
-    maxWidth: '960px',
-    maxHeight: '500px',
-    width: '100%',
-    objectFit: 'cover',
-    cursor: 'pointer',
-    backgroundImage: `url(https://res.cloudinary.com/zeft/image/upload/q_auto,f_auto,w_auto,c_fill/v1623768795/zeft_landing/top_fw9nyp.png)`,
-    backgroundSize: 'auto auto',
-    backgroundRepeat: 'no-repeat',
-  },
-  topLeftSectionTitle: {
-    // border: `1px solid  ${COLOR.quizoutlineGray}`,
-    boxShadow: '0 0 0 0 #da0505',
-    fontSize: '20px',
-    lineHeight: 1.2,
-    position: 'absolute',
-    '& b': {
-      fontWeight: 900,
-      lineHeight: 1.5,
-      // color: COLOR.textBlack,  // use default black to avoid low contrast
-    },
-    [theme.breakpoints.down('md')]: {
-      lineHeight: 1.43,
-      fontSize: '14px',
-      backgroundColor: COLOR.backgroundWhite,
-      bottom: '2rem', // for tagLine overlay
-      right: '0', // for tagLine overlay
-      width: '240px', // for tagLine overlay
-      zIndex: '2', // for tagLine overlay
-      padding: '0.3rem 0.5rem',
-      marginRight: 0,
-    }, // for tagLine overlay
-  },
-  topLeftSectionContainer: {
-    zIndex: 2001,
-  },
-  topLeftSectionButton: {
-    '& a': {
-      width: '18rem',
-    },
-    marginRight: '24px',
-    marginTop: '180px', // for tagLine overlay
-    [theme.breakpoints.down('md')]: {
-      marginTop: '0px', // for tagLine overlay
-      display: 'none',
-    },
-  },
-  topButtomSectionButton: {
-    textAlign: 'center',
-    [theme.breakpoints.up('md')]: {
-      marginTop: '80px', // for tagLine overlay
-      display: 'none',
-    },
-  },
-  solutionCard: {
-    padding: '24px',
-    border: `1px solid  ${COLOR.quizoutlineGray}`,
-    backgroundColor: COLOR.backgroundWhite,
-    boxShadow: '0 0 0 0 #da0505',
-    display: 'grid',
-    justifyItems: 'center',
-    alignItems: 'center',
-    gridTemplateColumns: 'auto',
-    gridTemplateRows: 'auto auto auto',
-    gridTemplateAreas: `"header" "image" "message"`,
-    [theme.breakpoints.up('md')]: {
-      padding: '80px',
-      gridTemplateColumns: '70% 30%',
-      gridTemplateRows: 'auto auto',
-      gridTemplateAreas: `"header  image" "message image"`,
-    },
-  },
-  solutionCardContainer: {
-    padding: '1rem',
-    display: 'flex',
-    flexDirection: 'column',
-    color: COLOR.textBlack,
-  },
-  solutionCardHeader: {
-    gridArea: 'header',
-    [theme.breakpoints.up('md')]: {
-      justifySelf: 'left', // グリッド内で左よりに
-    },
-  },
-  solutionCardImage: {
-    gridArea: 'image',
-  },
-  solutionCardMessage: {
-    gridArea: 'message',
-  },
-  itemImgListSection: {
-    backgroundColor: COLOR.tickerGray,
-    textAlign: 'center',
-  },
-  usecaseCard: {
-    '& h6': {
-      padding: '1rem',
-    },
-    '& p': {
-      textAlign: 'left',
-      lineHeight: '1.5rem',
-    },
-  },
-  deleteLinkColor: {
-    /* visited link */
-    '&:visited': {
-      color: COLOR.textWhite,
-    },
-    /* mouse over link */
-    '&:hover': {
-      color: COLOR.textWhite,
-    },
-    /* selected link */
-    '&:active': {
-      color: COLOR.textWhite,
-    },
-  },
-}))
+}
 
 /**
  * Logoの位置をアプリ本体と合わせるため
@@ -186,8 +153,6 @@ const HeadPadding = () => {
 }
 
 export function Home() {
-  const classes = useStyles()
-
   const fadeInTargetsList = {
     itemImgListSection: false,
     howToUse: false,
@@ -199,7 +164,7 @@ export function Home() {
 
   const targetRef = useRef([])
 
-  const history = useHistory()
+  const navigate = useNavigate()
 
   Object.entries(fadeInTargetsList).map((_, key) => {
     targetRef.current[key] = React.createRef()
@@ -218,10 +183,10 @@ export function Home() {
       <MenuAppBar />
       {/* Cover */}
       <Box pb={5} mt={2}>
-        <Box className={classes.topContainer}>
-          <Box className={classes.top} alignItems="center">
-            <Box className={classes.topLeftSectionContainer}>
-              <Box className={classes.topLeftSectionTitle}>
+        <TopContainer>
+          <Top alignItems="center">
+            <Box sx={{ zIndex: 2001 }}>
+              <TopLeftSectionTitle>
                 <Typography variant="body2">
                   <p>ギフト診断でぴったりのギフトが見つかる</p>
                 </Typography>
@@ -230,57 +195,56 @@ export function Home() {
                     探す・選ぶ・贈れる<br></br>ここで完結するギフトサービス
                   </b>
                 </Typography>
-              </Box>
-              <Box py={3} className={classes.topLeftSectionButton}>
-                <SquareButton
+              </TopLeftSectionTitle>
+              <TopLeftSectionButton py={3}>
+                <DeleteLinkColor
                   fullWidth
                   // href="/product/top"
-                  onClick={() => history.push('/product/top')}
+                  onClick={() => navigate('/product/top')}
                   buttonType="primary"
-                  className={classes.deleteLinkColor}
                 >
                   まずはギフト診断
-                </SquareButton>
-              </Box>
+                </DeleteLinkColor>
+              </TopLeftSectionButton>
             </Box>
             <Box zIndex="modal">
-              <Image
+              <TopRightSectionCover
                 cloudName="quiz_icon_j3tqfr"
                 publicId={optimize(
                   'https://res.cloudinary.com/zeft/image/upload/w_1000,ar_16:9,c_fill,g_auto,e_sharpen/v1628820889/zeft_landing/element5-digital-HnyPuEgW0O8-unsplash_1_qeftnz.png'
                 )}
-                className={classes.topRightSectionCover}
               />
             </Box>
-          </Box>
-        </Box>
+          </Top>
+        </TopContainer>
       </Box>
 
       <Container>
         {/* CTA */}
-        <Box py={3} className={classes.topButtomSectionButton}>
+        <TopButtomSectionButton py={3}>
           <Box width="100%">
-            <SquareButton
+            <DeleteLinkColor
               fullWidth
               // href="/product/top"
-              onClick={() => history.push('/product/top')}
+              onClick={() => navigate('/product/top')}
               buttonType="primary"
-              className={classes.deleteLinkColor}
             >
               まずはギフト診断
-            </SquareButton>
+            </DeleteLinkColor>
           </Box>
-        </Box>
+        </TopButtomSectionButton>
       </Container>
 
       {/* how to use section */}
-      <Container className={classes.centerlizer}>
+      <Container sx={{ textAlign: 'center' }}>
         <Grid container>
           <Grid xs={12} sm={12}>
             <Box
               ref={targetRef.current[1]}
               className={
-                fadeInTargetsList['howToUse'] ? classes.visible : classes.invisible
+                fadeInTargetsList['howToUse']
+                  ? visibleStyles.visible
+                  : visibleStyles.invisible
               }
               py={5}
             >
@@ -298,16 +262,17 @@ export function Home() {
             <Box
               ref={targetRef.current[2]}
               className={
-                fadeInTargetsList['usecaseCard1'] ? classes.visible : classes.invisible
+                fadeInTargetsList['usecaseCard1']
+                  ? visibleStyles.visible
+                  : visibleStyles.invisible
               }
             >
-              <Box py={5} px={2} className={classes.usecaseCard}>
-                <Image
+              <UsecaseCard py={5} px={2}>
+                <StyledImage
                   cloudName="thank_xe9nva"
                   publicId={optimize(
                     'https://res.cloudinary.com/zeft/image/upload/v1623768794/zeft_landing/ui1_udz8gc.png'
                   )}
-                  className={classes.img}
                 />
                 <Typography variant="h6">
                   <b>ギフト診断で探す</b>
@@ -315,7 +280,7 @@ export function Home() {
                 <Typography variant="body2">
                   贈るきっかけやお相手についてのアンケートに回答してください。回答内容から最適な商品をピックアップします。
                 </Typography>
-              </Box>
+              </UsecaseCard>
             </Box>
           </Grid>
           {/* card 2 */}
@@ -323,16 +288,17 @@ export function Home() {
             <Box
               ref={targetRef.current[3]}
               className={
-                fadeInTargetsList['usecaseCard2'] ? classes.visible : classes.invisible
+                fadeInTargetsList['usecaseCard2']
+                  ? visibleStyles.visible
+                  : visibleStyles.invisible
               }
             >
-              <Box py={5} px={2} className={classes.usecaseCard}>
-                <Image
+              <UsecaseCard py={5} px={2}>
+                <StyledImage
                   cloudName="thank_xe9nva"
                   publicId={optimize(
                     'https://res.cloudinary.com/zeft/image/upload/v1628821671/zeft_landing/iPhone_12_Pro_6_5_dvxsyp.png'
                   )}
-                  className={classes.img}
                 />
                 <Typography variant="h6">
                   <b>1つから3つまで選べる</b>
@@ -340,7 +306,7 @@ export function Home() {
                 <Typography variant="body2">
                   アンケートをもとにギフトを表示します。1つ選ぶことも可能ですが3つまで選び、貰い手に1つ選んでもらうことも可能です。
                 </Typography>
-              </Box>
+              </UsecaseCard>
             </Box>
           </Grid>
           {/* card 3 */}
@@ -348,21 +314,17 @@ export function Home() {
             <Box
               ref={targetRef.current[4]}
               className={
-                fadeInTargetsList['usecaseCard3'] ? classes.visible : classes.invisible
+                fadeInTargetsList['usecaseCard3']
+                  ? visibleStyles.visible
+                  : visibleStyles.invisible
               }
             >
-              <Box
-                py={5}
-                px={2}
-                ref={targetRef.current[4]}
-                className={classes.usecaseCard}
-              >
-                <Image
+              <UsecaseCard py={5} px={2} ref={targetRef.current[4]}>
+                <StyledImage
                   cloudName="thank_xe9nva"
                   publicId={optimize(
                     'https://res.cloudinary.com/zeft/image/upload/v1623768795/zeft_landing/ui3_jrlr6c.png'
                   )}
-                  className={classes.img}
                 />
                 <Typography variant="h6">
                   <b>オンラインで贈れる</b>
@@ -370,7 +332,7 @@ export function Home() {
                 <Typography variant="body2">
                   購入したらURLが発行されるので、SNSやメールなどで贈ることが出来ます。またQRコードを印刷したギフトカードも作成可能です。もちろん住所を指定し、届けることも出来ます。
                 </Typography>
-              </Box>
+              </UsecaseCard>
             </Box>
           </Grid>
         </Grid>
@@ -380,15 +342,12 @@ export function Home() {
       <Box py={5}>
         <Box
           className={
-            fadeInTargetsList['itemImgListSection'] ? classes.visible : classes.invisible
+            fadeInTargetsList['itemImgListSection']
+              ? visibleStyles.visible
+              : visibleStyles.invisible
           }
         >
-          <Box
-            ref={targetRef.current[0]}
-            pt="50px"
-            pb="60px"
-            className={classes.itemImgListSection}
-          >
+          <ItemImgListSection ref={targetRef.current[0]} pt="50px" pb="60px">
             <Typography variant="h5">
               <Box pb="50px">
                 <b>
@@ -397,16 +356,20 @@ export function Home() {
               </Box>
             </Typography>
             <LpTicker />
-          </Box>
+          </ItemImgListSection>
         </Box>
       </Box>
 
-      <Container className={classes.centerlizer}>
+      <Container sx={{ textAlign: 'center' }}>
         {/* buttom CTA */}
         <Box
           py={5}
           ref={targetRef.current[5]}
-          className={fadeInTargetsList['buttonCta'] ? classes.visible : classes.invisible}
+          className={
+            fadeInTargetsList['buttonCta']
+              ? visibleStyles.visible
+              : visibleStyles.invisible
+          }
         >
           <Typography variant="h5">
             <b>最適なギフトをもっと簡単に</b>
@@ -415,14 +378,13 @@ export function Home() {
             リンク、ギフトカード、カタログギフト、あなたのシーンにあったギフト体験の作成が簡単にできます。
           </Typography>
           <Box py={3}>
-            <SquareButton
+            <DeleteLinkColor
               // href="/product/top"
-              onClick={() => history.push('/product/top')}
+              onClick={() => navigate('/product/top')}
               buttonType="primary"
-              className={classes.deleteLinkColor}
             >
               まずはギフト診断
-            </SquareButton>
+            </DeleteLinkColor>
           </Box>
         </Box>
       </Container>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
-import { Route, Switch, useRouteMatch, useHistory, useLocation } from 'react-router-dom'
+import { Route, Routes, useNavigate, useLocation } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 import { format } from 'date-fns'
 import ja from 'date-fns/locale/ja'
@@ -11,16 +11,26 @@ import {
 } from 'utilities/CommonHooks'
 import { Head } from 'utilities/Head'
 import { QUERY_GET_PRODUCTS_BY_IDS } from 'container/hooks'
+import { dataLayerPush } from 'utilities/GoogleAnalytics'
 
 import { Recieved } from 'pages/SPA/reciever/checkout/ReRecieved'
 import { ShowProduct } from 'pages/SPA/reciever/checkout/ReShowProduct'
 import { AddressForm } from 'pages/SPA/reciever/checkout/ReAddressForm'
 import { AddressConfirm } from 'pages/SPA/reciever/checkout/ReAddressConfirm'
 import { ReThank } from 'pages/SPA/reciever/checkout/ReThank'
+import { PreviewGift } from 'pages/SPA/reciever/PreviewGift'
+import { ChooseVariation } from 'pages/SPA/reciever/ChooseVariation'
+
 import { ErrorPage } from 'pages/ErrorPage'
-import { ZeftCard, formKeys, FormKey, Product as ProductType } from 'constants/index'
+import {
+  ZeftCard,
+  PreviewData as PreviewDataType,
+  formKeys,
+  FormKey,
+  Product as ProductType,
+} from 'constants/index'
 import { useForm } from '../utilities/useForm'
-import { EngagedRow } from 'molecules'
+import { ItemSummary } from 'organisms'
 /**
  * ギフト取得用フック
  */
@@ -29,14 +39,18 @@ function useProduct() {
   const [zeftCard, setZeftCard] = useState<ZeftCard>({
     ProductIDList: [],
     Expires: '',
-    Status: '',
+    Status: 'VALID_AND_NOT_RECEIVED',
     Message: '',
     To: '',
     From: '',
+    SelectedFinally: '',
   })
   const [giftToken, setGiftToken] = useState('')
+  const [isPreview, setIsPreview] = useState(false)
   const [isTokenValid, setIsTokenValid] = useState(true)
-  const [fetchProducts, { data }] = useLazyQuery(QUERY_GET_PRODUCTS_BY_IDS)
+  const [fetchProducts, { data }] = useLazyQuery<{
+    productDetailCollection: { items: Array<ProductType>; total: number }
+  }>(QUERY_GET_PRODUCTS_BY_IDS)
   const fetchCard = useCallback(async (token: string) => {
     const apiUrl = process.env.REACT_APP_CLOUD_RUN_CADU_API_URL
     const res = await fetch(`${apiUrl}/card?token=${token}`)
@@ -53,9 +67,12 @@ function useProduct() {
   }, [])
 
   useEffect(() => {
-    const token = new URLSearchParams(search).get('token')
+    const params = new URLSearchParams(search)
+    const token = params.get('token')
+    const preview = params.get('preview')
     if (token !== null) {
       setGiftToken(token)
+      setIsPreview(preview === 'true')
       fetchCard(token)
     }
   }, [])
@@ -82,7 +99,62 @@ function useProduct() {
       giftToken,
       zeftCard,
       products: productItemsSorted,
+      isPreview,
     }
+  }
+}
+
+function useItemVariation(product: ProductType | undefined): {
+  variants: {
+    title: string
+    patterns: {
+      title: string
+      image: string | null
+      isActive: boolean
+      onClick: () => void
+    }[]
+  }[]
+  selectedVariants: {
+    variant: string
+    selectedOption: string
+  }[]
+} {
+  const variants = !!product ? product.variantsCollection.items : []
+  const [selectedVariants, setSelectedVariants] = useState(
+    variants.map((variant) => ({
+      variant: variant.title,
+      selectedOption: '',
+    }))
+  )
+
+  useEffect(() => {
+    setSelectedVariants(
+      variants.map((variant) => ({
+        variant: variant.title,
+        selectedOption: '',
+      }))
+    )
+  }, [JSON.stringify(variants)])
+
+  const variantsWithHandler = variants.map((variant) => ({
+    title: variant.title,
+    patterns: variant.patternsCollection.items.map((pattern) => ({
+      title: pattern.title,
+      image: !!pattern.imageCloudinary ? pattern.imageCloudinary[0].secure_url : null,
+      isActive:
+        selectedVariants.find((v) => v.variant === variant.title)?.selectedOption ===
+        pattern.title,
+      onClick: () =>
+        setSelectedVariants([
+          ...selectedVariants.filter((v) => v.variant !== variant.title),
+          { variant: variant.title, selectedOption: pattern.title },
+        ]),
+    })),
+  }))
+
+  return {
+    variants: variantsWithHandler,
+    selectedVariants,
   }
 }
 
@@ -90,8 +162,7 @@ function useProduct() {
  * 貰い手情報確定フック
  */
 function useSendRecierverInfo() {
-  const history = useHistory()
-  const { path } = useRouteMatch()
+  const navigate = useNavigate()
 
   const sendRecieverInfo = async (
     name?: string,
@@ -102,7 +173,8 @@ function useSendRecierverInfo() {
     token?: string,
     selectedFinally?: string,
     productName?: string,
-    isNewsletter?: boolean
+    isNewsletter?: boolean,
+    selectedFinallyVariant?: string
   ) => {
     const apiUrl = process.env.REACT_APP_CLOUD_RUN_CADU_API_URL
     const res = await fetch(`${apiUrl}/recipient`, {
@@ -120,11 +192,19 @@ function useSendRecierverInfo() {
         selectedFinally,
         productName,
         isNewsletter,
+        selectedFinallyVariant,
       }),
     })
     const result = await res.json()
     if (result.Success) {
-      history.push(`${path}/thank`)
+      //push event to data layer
+      dataLayerPush({ event: 'receiver address completed' })
+      dataLayerPush({
+        event: 'shipping info submitted',
+        giftRecieved: selectedFinally as string,
+        prefectureSent: address?.split(' ')[0] as string, // address is separated by space,
+      })
+      navigate(`/gift/thank`)
     } else if (result.Success === false && result.Message !== '') {
       alert(result.Message)
     } else {
@@ -153,12 +233,18 @@ function useSendRecierverInfo() {
  * コンテナコンポーネント
  */
 const RecieverContainer: React.FC = () => {
-  const { path } = useRouteMatch()
-  const history = useHistory()
-  const { isTokenValid, giftToken, zeftCard, products } = useProduct()
+  const navigate = useNavigate()
+  const { isTokenValid, giftToken, zeftCard, products, isPreview } = useProduct()
 
   const [recieverInfo, setRecieverInfo] = useForm<FormKey>(formKeys)
   const [isNewsletter, setIsNewsletter] = useState<boolean>(true)
+  const [previewData, setPreviewData] = useState<PreviewDataType>({
+    itemsInCart: [],
+    message: '',
+    to: '',
+    from: '',
+  })
+
   const sendRecieverInfoToBackend = useSendRecierverInfo()
   const { withClickStopSideEffect } = usePreventClickMashing()
 
@@ -176,137 +262,199 @@ const RecieverContainer: React.FC = () => {
 
   const handleChosen = (num: number) => {
     setSelected(num)
-    history.push(`${path}/address`)
+    if (!!products && products[num].variantsCollection.items.length !== 0) {
+      navigate(`/gift/variation`)
+    } else {
+      navigate(`/gift/address`)
+    }
   }
 
-  // リロード対策
-  // usePreventReload();
+  const productSelected = !!products ? products[selected] : undefined
+  const { variants, selectedVariants } = useItemVariation(productSelected)
+
+  const sendRecieverInfo = withClickStopSideEffect(() => {
+    const { name, email, postalCode, phoneNumber } = recieverInfo
+    if (products == null) {
+      return
+    }
+    sendRecieverInfoToBackend(
+      name,
+      postalCode,
+      fullAddress,
+      email,
+      phoneNumber,
+      giftToken,
+      zeftCard.ProductIDList[selected],
+      products[selected].title,
+      isNewsletter,
+      selectedVariants.map((v) => `${v.variant}は${v.selectedOption}`).join(', ')
+    )
+  })
+
+  useEffect(() => {
+    if (localStorage.previewData) {
+      const tempdata = JSON.parse(localStorage.previewData)
+      setPreviewData(tempdata)
+    }
+  }, [])
 
   return (
-    <Switch>
-      <Route exact path={`${path}/thank`}>
-        <Head title="受取手続き完了｜ZEFT ゼフト"></Head>
-        <ReThank />
-      </Route>
-      <Route exact path={`${path}/confirm`}>
-        <Head title="お届け先確認｜ZEFT ゼフト"></Head>
-        <AddressConfirm
-          postalCode={recieverInfo.postalCode}
-          address={fullAddress}
-          name={recieverInfo.name}
-          email={recieverInfo.email}
-          phoneNumber={recieverInfo.phoneNumber}
-          handleBackButton={() => history.push(`${path}/address`)}
-          handleNextButton={withClickStopSideEffect(() => {
-            const { name, email, postalCode, phoneNumber } = recieverInfo
-            if (products == null) {
-              return
-            }
-            sendRecieverInfoToBackend(
-              name,
-              postalCode,
-              fullAddress,
-              email,
-              phoneNumber,
-              giftToken,
-              zeftCard.ProductIDList[selected],
-              products[selected].title,
-              isNewsletter
-            )
-          })}
-        >
-          {!!products && (
-            <EngagedRow
-              mainText={products[selected].title}
-              subText={products[selected].brand.brandName}
-              image={products[selected].productImageCloudinary[0].secure_url}
-              leftButtomButtonText="変更する"
-              handleClickLeftButtomButton={() => {
-                history.push(`${path}/card`)
+    <Routes>
+      <Route
+        path={`thank`}
+        element={
+          <React.Fragment>
+            <Head title="受取手続き完了｜ZEFT ゼフト"></Head>
+            <ReThank />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`address`}
+        element={
+          <React.Fragment>
+            <Head title="お届け先入力｜ZEFT ゼフト"></Head>
+            <AddressForm
+              recieverName={recieverInfo.name === undefined ? '' : recieverInfo.name}
+              onChangeRecieverName={(event) =>
+                setRecieverInfo('name', event.target.value)
+              }
+              email={recieverInfo.email === undefined ? '' : recieverInfo.email}
+              onChangeEmail={(event) => setRecieverInfo('email', event.target.value)}
+              postalCode={
+                recieverInfo.postalCode === undefined ? '' : recieverInfo.postalCode
+              }
+              onChangePostalCode={(event) =>
+                setRecieverInfo('postalCode', event.target.value)
+              }
+              prefecture={
+                recieverInfo.prefecture === undefined ? '' : recieverInfo.prefecture
+              }
+              onChangePrefecture={(event) =>
+                setRecieverInfo('prefecture', event.target.value)
+              }
+              address1={recieverInfo.address1 === undefined ? '' : recieverInfo.address1}
+              onChangeAddress1={(event) =>
+                setRecieverInfo('address1', event.target.value)
+              }
+              address2={recieverInfo.address2 === undefined ? '' : recieverInfo.address2}
+              onChangeAddress2={(event) =>
+                setRecieverInfo('address2', event.target.value)
+              }
+              phoneNumber={
+                recieverInfo.phoneNumber === undefined ? '' : recieverInfo.phoneNumber
+              }
+              onChangePhoneNumber={(event) =>
+                setRecieverInfo('phoneNumber', event.target.value)
+              }
+              isNewsletter={isNewsletter}
+              toggleNewsLetter={() => {
+                setIsNewsletter((prev) => !prev)
               }}
-            />
-          )}
-        </AddressConfirm>
-      </Route>
-      <Route exact path={`${path}/address`}>
-        <Head title="お届け先入力｜ZEFT ゼフト"></Head>
-        <AddressForm
-          recieverName={recieverInfo.name === undefined ? '' : recieverInfo.name}
-          onChangeRecieverName={(event) => setRecieverInfo('name', event.target.value)}
-          email={recieverInfo.email === undefined ? '' : recieverInfo.email}
-          onChangeEmail={(event) => setRecieverInfo('email', event.target.value)}
-          postalCode={
-            recieverInfo.postalCode === undefined ? '' : recieverInfo.postalCode
-          }
-          onChangePostalCode={(event) =>
-            setRecieverInfo('postalCode', event.target.value)
-          }
-          prefecture={
-            recieverInfo.prefecture === undefined ? '' : recieverInfo.prefecture
-          }
-          onChangePrefecture={(event) =>
-            setRecieverInfo('prefecture', event.target.value)
-          }
-          address1={recieverInfo.address1 === undefined ? '' : recieverInfo.address1}
-          onChangeAddress1={(event) => setRecieverInfo('address1', event.target.value)}
-          address2={recieverInfo.address2 === undefined ? '' : recieverInfo.address2}
-          onChangeAddress2={(event) => setRecieverInfo('address2', event.target.value)}
-          phoneNumber={
-            recieverInfo.phoneNumber === undefined ? '' : recieverInfo.phoneNumber
-          }
-          onChangePhoneNumber={(event) =>
-            setRecieverInfo('phoneNumber', event.target.value)
-          }
-          isNewsletter={isNewsletter}
-          toggleNewsLetter={() => {
-            setIsNewsletter((prev) => !prev)
-          }}
-          onClickNextButton={() => {
-            history.push(`${path}/confirm`)
-          }}
-        >
-          {!!products && (
-            <EngagedRow
-              mainText={products[selected].title}
-              subText={products[selected].brand.brandName}
-              image={products[selected].productImageCloudinary[0].secure_url}
-              leftButtomButtonText="変更する"
-              handleClickLeftButtomButton={() => {
-                history.push(`${path}/card`)
-              }}
-            />
-          )}
-        </AddressForm>
-      </Route>
-      <Route path={`${path}/card`}>
-        <ShowProduct
-          message={zeftCard.Message}
-          products={!!products ? products : []}
-          handleChosen={handleChosen}
-          expires={zeftCard !== null ? getJapaneseDate(zeftCard.Expires) : ' - '}
-        />
-      </Route>
-      <Route path={path}>
-        {isTokenValid ? (
-          <>
-            <Head title="ZEFT ゼフト｜ギフトが届きました"></Head>
-            <Recieved
+              isPreview={isPreview}
+            >
+              {!!products && (
+                <ItemSummary
+                  img={products[selected].productImageCloudinary[0].secure_url}
+                  itemName={products[selected].title}
+                  brand={products[selected].brand.brandName}
+                  isNoshi={true} // do not show noshi chip at reciever's page
+                  variants={selectedVariants}
+                />
+              )}
+            </AddressForm>
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`confirm`}
+        element={
+          <React.Fragment>
+            <Head title="お届け先入力｜ZEFT ゼフト"></Head>
+            <AddressConfirm
+              recieverName={recieverInfo.name === undefined ? '' : recieverInfo.name}
+              email={recieverInfo.email === undefined ? '' : recieverInfo.email}
+              postalCode={
+                recieverInfo.postalCode === undefined ? '' : recieverInfo.postalCode
+              }
+              prefecture={
+                recieverInfo.prefecture === undefined ? '' : recieverInfo.prefecture
+              }
+              address1={recieverInfo.address1 === undefined ? '' : recieverInfo.address1}
+              address2={recieverInfo.address2 === undefined ? '' : recieverInfo.address2}
+              phoneNumber={
+                recieverInfo.phoneNumber === undefined ? '' : recieverInfo.phoneNumber
+              }
+              onClickNextButton={sendRecieverInfo}
+              isPreview={isPreview}
+            >
+              {!!products && (
+                <ItemSummary
+                  img={products[selected].productImageCloudinary[0].secure_url}
+                  itemName={products[selected].title}
+                  brand={products[selected].brand.brandName}
+                  isNoshi={true} // do not show noshi chip at reciever's page
+                  variants={selectedVariants}
+                />
+              )}
+            </AddressConfirm>
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`card/*`}
+        element={
+          <React.Fragment>
+            <ShowProduct
+              message={zeftCard.Message}
+              products={!!products ? products : []}
+              handleChosen={handleChosen}
               expires={zeftCard !== null ? getJapaneseDate(zeftCard.Expires) : ' - '}
-              handleClick={() => history.push(`${path}/card`)}
-              isProductDetailAvailable={!!products}
-              sendRecieverInfo={zeftCard.To}
-              senderSenderInfo={zeftCard.From}
-              giftMessage={zeftCard.Message}
+              expiresDate={zeftCard.Expires}
+              selected={
+                zeftCard.Status === 'VALID_AND_RECEIVED' ||
+                zeftCard.Status === 'EXPIRED_AND_RECEIVED'
+              }
+              isPreview={isPreview}
             />
-          </>
-        ) : (
-          <>
-            <Head title="エラー｜ZEFT ゼフト"></Head>
-            <ErrorPage></ErrorPage>
-          </>
-        )}
-      </Route>
-    </Switch>
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`preview/*`}
+        element={
+          <PreviewGift
+            itemsInCart={previewData ? previewData.itemsInCart : []}
+            sendRecieverInfo={previewData ? previewData.to : ''}
+            senderSenderInfo={previewData ? previewData.from : ''}
+            giftMessage={previewData ? previewData.message : ''}
+          />
+        }
+      />
+      <Route path={`variation`} element={<ChooseVariation variants={variants} />} />
+      <Route
+        index
+        element={
+          isTokenValid ? (
+            <>
+              <Head title="ZEFT ゼフト｜ギフトが届きました"></Head>
+              <Recieved
+                handleClick={() => navigate(`/gift/card`)}
+                isProductDetailAvailable={!!products}
+                sendRecieverInfo={zeftCard.To}
+                senderSenderInfo={zeftCard.From}
+                giftMessage={zeftCard.Message}
+              />
+            </>
+          ) : (
+            <>
+              <Head title="エラー｜ZEFT ゼフト"></Head>
+              <ErrorPage></ErrorPage>
+            </>
+          )
+        }
+      />
+    </Routes>
   )
 }
 

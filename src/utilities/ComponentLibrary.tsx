@@ -1,31 +1,80 @@
 import React from 'react'
 import {
+  GradientButton,
+  GradientOutlinedButton,
   SquareButton,
   AnswerButton,
   AnswerCircle,
   Tag,
   Switch,
   FormPullDown,
+  VariationCard,
+  VariationText,
 } from 'atoms'
-import { MenuAppBar, ShareLink, ItemSummary, CheckoutSummary } from 'organisms'
+import {
+  MenuAppBar,
+  ShareLink,
+  ItemSummary,
+  CheckoutSummary,
+  ShippingRemark,
+  GiftPreview,
+} from 'organisms'
 import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
   PriceTable,
   ProductGuideItem,
+  DescriptionTable,
 } from 'molecules'
 
 import { Typography, Box } from '@mui/material'
 import { PageIndicator } from 'molecules'
 
 export const ComponentLibrary: React.FC = () => {
-  /* const [value, setValue] = useState(''); */
   return (
     <React.Fragment>
       <Box width="100%">
         <Box width="100%">
-          <h2>ProductGuideItem</h2>
+          <h3>VariationText</h3>
+          <VariationText onClick={() => alert('aaaa')}>3ヵ月 60cm</VariationText>
+          <h3>VariationCard</h3>
+          <VariationCard
+            width="150px"
+            image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0aNyjRpa4388plOz1_VL4B687n_xf2zTeEA&usqp=CAU"
+            text="ワイルドミント＆マンダリン"
+          />
+          <h3>GiftPreview</h3>
+          <GiftPreview
+            button={<button>preview gift</button>}
+            giftToken="3a9bb263b1e7f137020fb77e5581e7cb54bb0d812f214db9b14892264697c75b"
+          />
+          <h3>GradientOutlinedButton</h3>
+          <GradientOutlinedButton>Gradient Outlined Button</GradientOutlinedButton>
+          <h3>GradientOutlinedButton</h3>
+          <GradientButton>Gradient Button</GradientButton>
+          <h3>DescriptionTable</h3>
+          <DescriptionTable
+            table={[
+              {
+                column1: 'セット内容',
+                column2: `・グリーンモンスター3袋\n・レッドヒート3袋・クリオロベリーズ3袋`,
+              },
+              { column1: 'アレルギー', column2: 'dddddd' },
+            ]}
+          />
+          <h3>ShippingRemark</h3>
+          <ShippingRemark
+            items={[
+              {
+                itemName: 'ホワイトバルサミコビネガー フルムーン',
+                hokkaidoFee: 1300,
+                okinawaFee: 1900,
+                undeliverableSites: ['〇〇島'],
+              },
+            ]}
+          />
+          <h3>ProductGuideItem</h3>
           <ProductGuideItem
             item={{
               title: '/assets/product_guide/step-1.svg',
@@ -45,11 +94,10 @@ export const ComponentLibrary: React.FC = () => {
               direction: 'row',
             }}
           />
-          <h2>CheckoutSummary</h2>
+          <h3>CheckoutSummary</h3>
           <CheckoutSummary
             itemSummary={{
-              img:
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0aNyjRpa4388plOz1_VL4B687n_xf2zTeEA&usqp=CAU',
+              img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0aNyjRpa4388plOz1_VL4B687n_xf2zTeEA&usqp=CAU',
               brand: 'CONDIMENTO MEDITERRANEO',
               itemName: 'ホワイトバルサミコビネガー フルムーン',
               isNoshi: true,
@@ -60,16 +108,16 @@ export const ComponentLibrary: React.FC = () => {
               maxShipping: 1200,
             }}
           />
-          <h2>ItemSummary</h2>
+          <h3>ItemSummary</h3>
           <ItemSummary
             img="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0aNyjRpa4388plOz1_VL4B687n_xf2zTeEA&usqp=CAU"
             brand="CONDIMENTO MEDITERRANEO"
             itemName="ホワイトバルサミコビネガー フルムーン"
             isNoshi={true}
           />
-          <h2>PriceTable</h2>
+          <h3>PriceTable</h3>
           <PriceTable productPrice={10000} minShipping={500} maxShipping={1200} />
-          <h2>FormPullDown</h2>
+          <h3>FormPullDown</h3>
           <FormPullDown
             label="種類選択"
             value={''}
@@ -153,7 +201,7 @@ export const ComponentLibrary: React.FC = () => {
       {/*   items={TODOFUKEN_LIST} */}
       {/*   placeholder="都道府県を選択してください" */}
       {/* /> */}
-      <MenuAppBar backButton={true} />
+      <MenuAppBar giftBoxButton={false} />
       {/* <CouponPaymentForm /> */}
       {/* <ItemCardForReciever /> */}
       <SquareButton buttonType="primary">primary</SquareButton>

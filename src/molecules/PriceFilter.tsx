@@ -4,11 +4,10 @@ import { MenuItem, FormControl } from '@mui/material'
 
 import Select from '@mui/material/Select'
 
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
-
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+
+import { styled } from '@mui/system'
 
 const YEN_MARK = '\xA5'
 
@@ -27,43 +26,32 @@ type Props = {
   maxPrice: number | null
 }
 
-const useStyle = makeStyles((theme) =>
-  createStyles({
-    mobilewrap: {
-      backgroundColor: '#FFF4F2',
-      borderRadius: '10px',
-      color: '#FE8B7B',
-      height: '40px',
-      '& label': {
-        color: '#FE8B7B',
-      },
-      '& div': {
-        color: '#FE8B7B',
-        fontSize: '14px',
-      },
-      '& svg': {
-        color: '#FE8B7B',
-        fontSize: '18px',
-      },
-      '& fieldset': {
-        border: 0,
-      },
-      [theme.breakpoints.down(1000)]: {
-        display: 'flex',
-      },
-    },
-    checkbox: {
-      '& svg': {
-        color: '#FE8B7B',
-      },
-    },
-  })
-)
+const MobileWrap = styled(FormControl)((props) => ({
+  backgroundColor: '#FFF4F2',
+  borderRadius: '10px',
+  color: '#FE8B7B',
+  '& label': {
+    color: '#FE8B7B',
+  },
+  '& div': {
+    color: '#FE8B7B',
+    fontSize: '14px',
+    lineHeight: 2,
+  },
+  '& svg': {
+    color: '#FE8B7B',
+    fontSize: '18px',
+  },
+  '& fieldset': {
+    border: 0,
+  },
+  [props.theme.breakpoints.down(1000)]: {
+    display: 'flex',
+  },
+}))
 
 // https://mui.com/material-ui/react-select/#checkmarks
 export function PriceFilter(props: Props): JSX.Element {
-  const classes = useStyle()
-
   let text = '価格'
 
   if (props.minPrice || props.maxPrice) text = ''
@@ -80,7 +68,7 @@ export function PriceFilter(props: Props): JSX.Element {
 
   return (
     <Fragment>
-      <FormControl fullWidth size="small" className={classes.mobilewrap}>
+      <MobileWrap fullWidth size="small">
         <Select
           displayEmpty
           value="1"
@@ -91,7 +79,7 @@ export function PriceFilter(props: Props): JSX.Element {
         >
           <MenuItem value="1">{text}</MenuItem>
         </Select>
-      </FormControl>
+      </MobileWrap>
     </Fragment>
   )
 }

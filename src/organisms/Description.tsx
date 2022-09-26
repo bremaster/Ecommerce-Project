@@ -1,127 +1,258 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import { Box, Typography } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import { SquareButton } from '../atoms/SquareButton'
-import { BackButton } from '../atoms/BackButton'
-import { Accordion, AccordionSummary, AccordionDetails } from 'molecules'
-import { DescriptionSection } from 'organisms'
-import { COLOR } from 'theme'
-import { TagList } from '../molecules/TagList'
+
+import { useNavigate } from 'react-router-dom'
+import { Box, Typography, Dialog, Stack, useMediaQuery, Divider } from '@mui/material'
+import { Theme } from '@mui/material/styles'
 import ImageGallery from 'react-image-gallery'
 import 'react-image-gallery/styles/css/image-gallery.css'
+
+import {
+  GradientButton,
+  GradientOutlinedButton,
+  VariationCard,
+  VariationText,
+} from 'atoms'
+import { DescriptionSection, ShippingRemark } from 'organisms'
+import { COLOR } from 'theme'
+import { DescriptionGradientTable } from 'molecules'
 import { SelectStatus } from 'constants/index'
 import AdditionalInfoItem from './AdditionalInfoItem'
 
+import { styled } from '@mui/system'
+
 const YEN_MARK = '\xA5'
 
-const useStyles = makeStyles(() => ({
-  root: {
-    color: COLOR.textBlack,
-    width: '100%',
-    // maxWidth: 500,
-    backgroundColor: '#ffffff',
-    marginBottom: '3rem',
+const IMAGE_GALLERY_SLIDE_SIZE_ON_LAPTOP = 460
+
+const Root = styled(Box)({
+  color: COLOR.textBlack,
+  width: '100%',
+  // maxWidth: 500,
+  backgroundColor: '#ffffff',
+  marginBottom: '3rem',
+  padding: '0 8px',
+})
+
+const TypoH1 = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 700,
+  fontSize: '30px',
+  lineHeight: '39px',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  marginTop: '8px',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 22,
+    lineHeight: '120%',
   },
-  brand: {
-    display: 'flex',
-    justifyContent: 'center',
-    '& h3': {
-      borderBottom: `2px solid ${COLOR.primaryNavy}`,
-      padding: '0 16px 5px 16px',
-    },
-    margin: '1.3rem 0 2.5rem 0',
+}))
+
+const TypoH2 = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 700,
+  fontSize: 22,
+  lineHeight: '44px',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 18,
+    lineHeight: '26px',
   },
-  brandHeader: {
-    fontWeight: 700,
-    marginTop: '2rem',
+}))
+
+const TypoH3 = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: '15px',
+  lineHeight: '27px',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  whiteSpace: 'pre-line',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 14,
+    lineHeight: '25.2px',
   },
-  brandDetail: {
-    fontSize: '0.9rem',
-    letterSpacing: '0.05em',
+}))
+
+const BrandName = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: 18,
+  lineHeight: '26px',
+  letterSpacing: '0.03em',
+  color: '#CFCAC4',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 12,
+    lineHeight: '150%',
+    marginTop: '7px',
   },
-  img: {
-    objectFit: 'contain',
-  },
-  expandBeyondParentDiv: {
-    // layout component has 16px padding for each side (sm screen size)
-    width: 'calc(100% + 32px)',
-    marginLeft: '-16px',
-    marginTop: '-16px',
-  },
-  typoH1: {
-    fontSize: '24px',
-    fontWeight: 700,
-  },
-  typoH2: {
-    fontSize: '18px',
-    fontWeight: 700,
-  },
-  typoH3: {
-    fontSize: '14px',
+}))
+
+const ShippingFee = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: 12,
+  lineHeight: '100%',
+  letterSpacing: '0.03em',
+  color: '#4A4A4A',
+  marginLeft: '6px',
+  '& span': {
+    fontFamily: 'Outfit',
+    fontSize: 16,
     fontWeight: 400,
-    lineHeight: '25px',
-    whiteSpace: 'pre-line',
   },
-  brandName: {
-    color: COLOR.brandNameGray,
-    marginTop: '2.0rem',
-    marginBottom: '0.8rem',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 10,
+    marginLeft: 0,
+    '& span': {
+      fontFamily: 'Outfit',
+      fontSize: 13,
+      fontWeight: 400,
+    },
   },
-  accordionContant: {
-    whiteSpace: 'pre-line',
+}))
+
+const Shipping = styled(Typography)((props) => ({
+  marginTop: '24px',
+  color: '#4A4A4A',
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: '13px',
+  lineHeight: '18.82px',
+  letterSpacing: '0.03em',
+  '& > span': {
+    fontFamily: 'Noto Sans JP',
+    fontStyle: 'normal',
+    fontWeight: 400,
+    cursor: 'pointer',
+    textDecorationLine: 'underline',
+    color: '#FE8B7B',
   },
-  brandImage: {
-    width: '100%',
-    objectFit: 'contain',
-    marginTop: '2rem',
+  [props.theme.breakpoints.down('md')]: {
+    marginTop: '16px',
+    fontSize: '12px',
   },
-  // overwrite image gallery css
-  imageGallery: {
-    // main image
-    '& .image-gallery-content .image-gallery-slide .image-gallery-image': {
-      maxHeight: 'none',
-      backgroundColor: '#EDF3FC', // for test
-    },
-    // thumbnail images
-    '& .image-gallery-thumbnails-container': {
-      textAlign: 'initial',
-      marginLeft: '1px', // スクロールしてから戻ってきた際に、左端の位置がほかの要素と揃うようにしたいので
-      marginTop: '7px',
-    },
-    '& .image-gallery-thumbnail': {
-      width: '85px',
-      height: '85px',
-      outline: 'none !important',
-    },
-    '& .image-gallery-thumbnail:hover': {
-      borderColor: 'transparent',
-      borderWidth: '3px',
-      outline: 'none',
-    },
-    '& .image-gallery-thumbnail:focus': {
-      borderColor: 'transparent',
-      outline: 'none',
-      borderWidth: '1px',
-    },
-    '& .image-gallery-thumbnail.active': {
-      borderColor: COLOR.primaryNavy,
-      borderWidth: '1px',
-    },
-    '& .image-gallery-thumbnail img': {
+}))
+
+const Tax = styled(Typography)((props) => ({
+  marginBottom: '2px',
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: 12,
+  lineHeight: '100%',
+  letterSpacing: '0.03em',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 10,
+  },
+}))
+
+const Price = styled(Typography)((props) => ({
+  fontFamily: 'Outfit',
+  fontStyle: 'normal',
+  fontWeight: 600,
+  fontSize: 30,
+  lineHeight: '100%',
+  display: 'flex',
+  alignItems: 'flex-end',
+  color: '#4A4A4A',
+  [props.theme.breakpoints.down('md')]: {
+    fontSize: 20,
+  },
+}))
+
+const Tag = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  fontStyle: 'normal',
+  fontWeight: 400,
+  fontSize: 12,
+  lineHeight: '100%',
+  color: '#FE8B7B',
+  padding: '7px 13px',
+  borderRadius: '10px',
+  border: '1px solid #FE8B7B',
+})
+
+const ImageGalleryWrap = styled(Box)((props) => ({
+  width: '100%',
+  [props.theme.breakpoints.up('md')]: {
+    width: '90%',
+    minWidth: IMAGE_GALLERY_SLIDE_SIZE_ON_LAPTOP + 'px',
+  },
+
+  // main image
+  '& .image-gallery-content .image-gallery-slide .image-gallery-image': {
+    maxHeight: 'none',
+    backgroundColor: '#EDF3FC', // for test
+    borderRadius: '10px',
+    [props.theme.breakpoints.up('md')]: {
+      // To prevent a little bit of background from showing.
       objectFit: 'cover',
-      backgroundColor: '#EDF3FC', // for test
-    },
-    '& .image-gallery-icon': {
-      filter: 'none',
-      color: COLOR.gray700,
-      zIndex: 3, // avoid overwrapping buttom sheet
-    },
-    '& .image-gallery-icon svg': {
-      strokeWidth: '1.5',
-      width: '18px',
+      height: '100%',
     },
   },
+  '& .image-gallery-content .image-gallery-slides': {
+    borderRadius: '10px',
+  },
+  // thumbnail images
+  '& .image-gallery-thumbnails-container': {
+    textAlign: 'left !important',
+    marginLeft: '1px', // スクロールしてから戻ってきた際に、左端の位置がほかの要素と揃うようにしたいので
+    marginTop: '7px',
+    [props.theme.breakpoints.up('md')]: {
+      // To avoid slide image from shrinking when the amount of thumbnails are small
+      minWidth: IMAGE_GALLERY_SLIDE_SIZE_ON_LAPTOP + 'px',
+      textAlign: 'left',
+    },
+  },
+  '& .image-gallery-thumbnail': {
+    width: '62px',
+    height: '62px',
+    outline: 'none !important',
+    borderRadius: '10px',
+    borderWidth: 0,
+    marginRight: '8px',
+  },
+  '& .image-gallery-thumbnail:hover': {
+    borderColor: 'transparent',
+    borderWidth: 0,
+    outline: 'none',
+  },
+  '& .image-gallery-thumbnail:focus': {
+    outline: 'none',
+    border: 0,
+  },
+  '& .image-gallery-thumbnail.active': {
+    border: 0,
+  },
+  '& .image-gallery-thumbnail img': {
+    objectFit: 'cover',
+    backgroundColor: '#EDF3FC', // for test
+    borderRadius: '10px',
+  },
+  '& .image-gallery-icon': {
+    filter: 'none',
+    color: COLOR.gray700,
+    zIndex: 3, // avoid overwrapping buttom sheet
+  },
+  '& .image-gallery-icon svg': {
+    strokeWidth: '1.5',
+    width: '18px',
+  },
+}))
+
+const BrandImage = styled('img')((props) => ({
+  width: '100%',
+  [props.theme.breakpoints.up('md')]: {
+    maxWidth: '330px',
+  },
+  objectFit: 'contain',
 }))
 
 export type Props = {
@@ -156,9 +287,23 @@ export type Props = {
     body?: string
   }[]
   productPrice?: number
-  shippingFeeMin?: number
-  shippingFeeMax?: number
+  shippingFee?: {
+    minFee: number
+    maxFee: number
+    hokkaidoFee: number
+    okinawaFee: number
+    undeliverable: Array<string> | null
+  }
   outOfStock?: boolean
+  noshiNg?: boolean
+  howManyInCart?: number
+  variants?: {
+    title: string
+    patterns: {
+      title: string
+      imageUrl: string | null
+    }[]
+  }[]
 }
 
 export const Description = ({
@@ -180,23 +325,29 @@ export const Description = ({
   isReRecommned = false,
   isReciever,
   selectableStatus,
-  tags = [],
   descriptionSections,
   productPrice,
-  shippingFeeMin,
-  shippingFeeMax,
+  shippingFee,
   outOfStock = false,
+  noshiNg = true,
+  howManyInCart,
+  variants,
 }: Props): JSX.Element => {
-  const classes = useStyles()
   const [width, setWidth] = useState<number | null | undefined>(null)
   const wrapperEl = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const width = wrapperEl?.current?.offsetWidth
     setWidth(width) // without px. just value.
   }, [width])
-  const history = useHistory()
+  const navigate = useNavigate()
 
-  const buttonMessage = calculateButtonMessage(isReciever, selectableStatus)
+  const [showShippingMore, setShowShippingMore] = useState(false)
+
+  const buttonMessage = calculateButtonMessage(
+    isReciever,
+    selectableStatus,
+    !!howManyInCart ? howManyInCart : 0
+  )
 
   // fix iOS focus position
   useEffect(() => {
@@ -208,182 +359,301 @@ export const Description = ({
     }
   }, [!!document])
 
-  return (
-    <div className={classes.root}>
-      <div>
-        {/* back button position must be the same as next page */}
-        <Box position="relative">
-          <Box position="absolute" top="16px">
-            <BackButton
-              position="top"
-              handleClick={() => {
-                history.goBack()
-              }}
-            />
-          </Box>
+  const isLaptop = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'), {
+    defaultMatches: false,
+  })
+
+  const variationText =
+    variants !== undefined
+      ? 'もらった方が' + variants.map((v) => v.title).join('・') + 'を選択'
+      : ''
+
+  const summaryPart = (
+    <>
+      <Stack direction={{ md: 'column', xs: 'column-reverse' }}>
+        <Box>
+          <BrandName>{brand.name}</BrandName>
+          <TypoH1>{name}</TypoH1>
         </Box>
-        <div
-          ref={wrapperEl}
-          className={`${classes.expandBeyondParentDiv} ${classes.imageGallery}`}
-        >
+      </Stack>
+
+      {!isReciever && (
+        <Fragment>
+          <Stack justifyContent="space-between" mt={'50px'} gap={2}>
+            <Stack
+              direction={{ md: 'row', xs: 'column' }}
+              gap={{ md: '4px', xs: '10px' }}
+              alignItems={{ md: 'flex-end', xs: 'start' }}
+            >
+              <Stack
+                direction="row"
+                gap="4px"
+                width={{ md: 'auto', xs: '100%' }}
+                justifyContent="space-between"
+                alignItems="flex-end"
+              >
+                <Stack direction="row" gap="4px" alignItems="flex-end">
+                  <Tax>税込</Tax>
+                  <Price>{priceText(productPrice)}</Price>
+                </Stack>
+                <Box display={{ md: 'none', xs: 'block' }}>
+                  {noshiNg === true && <Tag>のし不可</Tag>}
+                </Box>
+              </Stack>
+              {!!shippingFee && (
+                <ShippingFee>
+                  {shippingFee.minFee === shippingFee.maxFee ? (
+                    <>
+                      (送料別 <span>{priceText(shippingFee.maxFee)}</span>)
+                    </>
+                  ) : (
+                    <>
+                      (送料別{' '}
+                      <span>
+                        {priceText(shippingFee.minFee)} ~ {priceText(shippingFee.maxFee)}
+                      </span>
+                      )
+                    </>
+                  )}
+                </ShippingFee>
+              )}
+            </Stack>
+          </Stack>
+        </Fragment>
+      )}
+
+      {/* select item button and noshi */}
+      {isLaptop && (
+        <Stack direction="row" alignItems="center" gap={3} mt={2}>
+          <Box sx={{ width: 250 }}>
+            {outOfStock === false ? (
+              <GradientButton onClick={handleClick}>{buttonMessage}</GradientButton>
+            ) : (
+              <GradientButton onClick={() => navigate(-1)}>SOLD OUT</GradientButton>
+            )}
+          </Box>
+          {noshiNg && !isReciever && <Tag>のし不可</Tag>}
+        </Stack>
+      )}
+
+      {!isReciever && !!shippingFee && (
+        <>
+          <Shipping onClick={() => setShowShippingMore(true)}>
+            ※北海道・沖縄・離島・一部地域の送料に関しては
+            <span>こちら</span>
+          </Shipping>
+          <Dialog
+            open={showShippingMore}
+            onClose={() => setShowShippingMore(false)}
+            sx={{
+              '& .MuiPaper-root': {
+                borderRadius: '10px',
+                margin: '24px',
+              },
+            }}
+          >
+            <Box p="36px">
+              <ShippingRemark
+                items={[
+                  {
+                    itemName: name,
+                    hokkaidoFee: shippingFee.hokkaidoFee,
+                    okinawaFee: shippingFee.okinawaFee,
+                    undeliverableSites:
+                      shippingFee.undeliverable === null ? [] : shippingFee.undeliverable,
+                  },
+                ]}
+              />
+              <Box mt="2rem">
+                <GradientOutlinedButton onClick={() => setShowShippingMore(false)}>
+                  閉じる
+                </GradientOutlinedButton>
+              </Box>
+            </Box>
+          </Dialog>
+        </>
+      )}
+    </>
+  )
+
+  return (
+    <Root>
+      {/* image gallery and summary */}
+      <Box display={{ md: 'flex' }} maxWidth="900px" margin="auto">
+        <ImageGalleryWrap ref={wrapperEl}>
           <ImageGallery
             items={images.map((img) => ({
               original: img.original,
               thumbnail: img.original,
-              originalWidth: width as number,
-              originalHeight: width as number,
-              thumbnailWidth: 81,
-              thumbnailHeight: 81,
+              originalWidth: isLaptop
+                ? IMAGE_GALLERY_SLIDE_SIZE_ON_LAPTOP
+                : (width as number),
+              originalHeight: isLaptop
+                ? IMAGE_GALLERY_SLIDE_SIZE_ON_LAPTOP
+                : (width as number),
+              thumbnailWidth: 58,
+              thumbnailHeight: 58,
             }))}
             infinite={true}
-            showNav={true}
+            showNav={false}
             showFullscreenButton={false}
             useBrowserFullscreen={false}
             showPlayButton={false}
           />
-          {/* <Carousel */}
-          {/*   dragging={true} */}
-          {/*   swiping={true} */}
-          {/*   renderCenterLeftControls={() => {}} */}
-          {/*   renderCenterRightControls={() => {}} */}
-          {/* > */}
-          {/*   {images.map((image, i) => ( */}
-          {/*     <img */}
-          {/*       key={i} */}
-          {/*       width={width} */}
-          {/*       height={width} */}
-          {/*       className={classes.img} */}
-          {/*       src={image.original} */}
-          {/*       alt={`image_${i}`} */}
-          {/*     /> */}
-          {/*   ))} */}
-          {/* </Carousel> */}
-        </div>
-      </div>
-      <Typography className={`${classes.typoH3} ${classes.brandName}`}>
-        {brand.name}
-      </Typography>
-      <Typography className={classes.typoH1}>{name}</Typography>
-      {tags && <TagList tags={tags.map((tag) => tag.name)} />}
+        </ImageGalleryWrap>
+        <Box mt={{ md: '50px', xs: '24px' }} px={{ md: '50px' }} width={{ md: '80%' }}>
+          {summaryPart}
+        </Box>
+      </Box>
 
-      {!isReciever && (
-        <Fragment>
-          <Typography>{`税込み ${YEN_MARK}${productPrice?.toLocaleString(
-            'en-US'
-          )}`}</Typography>
-          <Typography className={`${classes.typoH3}`}>
-            {shippingFeeMin === shippingFeeMax
-              ? `※ 配送料が別途 ${YEN_MARK}${shippingFeeMax?.toLocaleString(
-                  'en-US'
-                )} かかります`
-              : `※ 配送料が別途 ${YEN_MARK}${shippingFeeMin?.toLocaleString(
-                  'en-US'
-                )} ~ ${YEN_MARK}${shippingFeeMax?.toLocaleString('en-US')} かかります`}
-          </Typography>
-        </Fragment>
-      )}
-
-      {isReRecommned && (
-        <Box mt={4} mb={5}>
-          <SquareButton buttonType="primary" fullWidth={true}>
-            この商品タイプで再レコメンド &nbsp;
-          </SquareButton>
+      {/* show variations if exist */}
+      {variants !== undefined && variants.length > 0 && (
+        <Box mt="60px" maxWidth="800px" mx="auto">
+          <TypoH2>{variationText}</TypoH2>
+          <TypoH3 mt="16px">もらった方が下記から選んで、受け取ることが出来ます。</TypoH3>
+          <Divider sx={{ mt: '30px' }} />
         </Box>
       )}
+      {variants?.map((variant) => (
+        <Box key={variant.title} mt="30px" maxWidth="800px" mx="auto">
+          <TypoH2>{variant.title}</TypoH2>
+          <Stack
+            width="100%"
+            direction="row"
+            p="3px"
+            mt="20px"
+            sx={{
+              overflowX: 'scroll',
+              overflow: '-moz-scrollbars-none',
+              '&::-webkit-scrollbar': {
+                width: '0 !important',
+              },
+            }}
+          >
+            {variant.patterns.map((pattern) => (
+              <Box key={pattern.title} sx={{ flexShrink: '0', mr: '10px' }}>
+                {pattern.imageUrl === null ? (
+                  <VariationText>{pattern.title}</VariationText>
+                ) : (
+                  <VariationCard
+                    text={pattern.title}
+                    image={pattern.imageUrl}
+                    width="120px"
+                  />
+                )}
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+      ))}
 
-      {/* 今後は keyMessage, summary ではなく、descriptionSection を利用 */}
-      {!!descriptionSections && descriptionSections.length !== 0 ? (
-        <Box mt="1rem" mb={3}>
+      {/* brief summary */}
+      <Box sx={{ maxWidth: '800px', margin: 'auto' }}>
+        <Divider sx={{ mt: '30px' }} />
+        <Box mt="50px">
+          <TypoH2>{keyMessage}</TypoH2>
+        </Box>
+        <Box mt={{ md: '30px', xs: '16px' }}>
+          <TypoH3>{summary}</TypoH3>
+        </Box>
+      </Box>
+
+      {/* additional info */}
+      <Box mt="80px">
+        {isLaptop ? (
+          <Box sx={{ display: 'grid', placeItems: 'center' }}>
+            <DescriptionGradientTable table={table} />
+          </Box>
+        ) : (
+          table.map(({ column1, column2 }) => (
+            <AdditionalInfoItem
+              column1={column1}
+              column2={column2}
+              key={column1}
+              defaultExpanded={false}
+            />
+          ))
+        )}
+      </Box>
+
+      {/* brand */}
+      <Stack
+        mt={{ xs: '50px', md: '70px' }}
+        mx="auto"
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{ maxWidth: '800px' }}
+        gap="57px"
+      >
+        <BrandImage src={brand.image} />
+        <Box>
+          <Box mt="1rem">
+            <TypoH2>{brand.name}</TypoH2>
+          </Box>
+          {brand.descriptions.map((description, index) => (
+            <Box mt="24px" key={index}>
+              <TypoH3>{description.body}</TypoH3>
+            </Box>
+          ))}
+        </Box>
+      </Stack>
+
+      {/* description sections */}
+      {!!descriptionSections && descriptionSections.length !== 0 && (
+        <Box mt={{ xs: '1rem', md: '2rem' }} mx="auto" sx={{ maxWidth: '800px' }}>
           {descriptionSections.map((section, i) => (
-            <Box mb={2} key={i}>
+            <Box mt={{ xs: '50px', md: '70px' }} key={i}>
               <DescriptionSection {...section} />
             </Box>
           ))}
         </Box>
-      ) : (
-        <>
-          <Box mt="1rem" mb={2}>
-            <Typography className={classes.typoH2}>{keyMessage}</Typography>
-          </Box>
-          <Box mb={5}>
-            <Typography className={classes.typoH3}>{summary}</Typography>
-          </Box>
-        </>
       )}
 
-      {/* <h3 className={classes.mainPrice}>$335</h3> */}
-
-      <Box mt={4} mb={5}>
-        {/* brand info */}
-        <Accordion defaultExpanded={true}>
-          <AccordionSummary>
-            <Typography variant="h6">ブランド</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <img src={brand.image} className={classes.brandImage} />
-            <div className={classes.brand}>
-              <Typography component="h3" variant="subtitle1">
-                {brand.name}
-              </Typography>
-            </div>
-            {brand.descriptions.map((description) => (
-              <Fragment key={description.title}>
-                {/* <Box mb={2}> */}
-                {/*   <Typography className={classes.typoH2}>{description.title}</Typography> */}
-                {/* </Box> */}
-                <Box mb={5}>
-                  <Typography variant="body1">{description.body}</Typography>
-                </Box>
-              </Fragment>
-            ))}
-          </AccordionDetails>
-        </Accordion>
-        {/* additional info */}
-        {table.map(({ column1, column2 }, index) => (
-          <AdditionalInfoItem column1={column1} column2={column2} key={index} />
-        ))}
-      </Box>
-
-      {/* <Box mt={4} mb={5}> */}
-      {/*   <SquareButton buttonType="primary" fullWidth={true} onClick={handleClick}> */}
-      {/*     {buttonMessage} */}
-      {/*   </SquareButton> */}
-      {/* </Box> */}
       {isReRecommned && (
         <Box>
-          <SquareButton buttonType="primary" fullWidth={true}>
-            この商品タイプで再レコメンド
-          </SquareButton>
+          <GradientButton>この商品タイプで再レコメンド</GradientButton>
         </Box>
       )}
-      <Box
-        position="sticky"
-        bottom="1rem"
-        width="100%"
-        boxShadow="rgb(0 0 0 / 25%) 0px 25px 50px -12px"
-      >
-        {outOfStock === false ? (
-          <SquareButton buttonType="primary" fullWidth={true} onClick={handleClick}>
-            {buttonMessage}
-          </SquareButton>
-        ) : (
-          <SquareButton buttonType="primary" fullWidth={true} onClick={history.goBack}>
-            SOLD OUT
-          </SquareButton>
-        )}
-      </Box>
-    </div>
+
+      {/* bottom margin */}
+      <Box height="100px" />
+
+      {/* add to cart button */}
+      {isLaptop === false && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: '0',
+            left: '0',
+            right: '0',
+            backgroundColor: 'white',
+            borderTop: '1px solid #DDDDDD',
+            zIndex: 3,
+            p: '16px 5%',
+          }}
+        >
+          {outOfStock === false ? (
+            <GradientButton onClick={handleClick}>{buttonMessage}</GradientButton>
+          ) : (
+            <GradientButton onClick={() => navigate(-1)}>SOLD OUT</GradientButton>
+          )}
+        </Box>
+      )}
+    </Root>
   )
 }
 
-function calculateButtonMessage(isReciever: boolean, selectableStatus: SelectStatus) {
+function calculateButtonMessage(
+  isReciever: boolean,
+  selectableStatus: SelectStatus,
+  inCart: number
+) {
   if (isReciever) {
     return 'このギフトを受け取る'
   }
 
   switch (selectableStatus) {
     case 'SELECTABLE':
-      return 'この商品を選択する'
+      return `${inCart + 1}つ目のギフトを選ぶ`
     case 'SELECTED':
       return '商品を選択から外す'
     case 'UNSELECTABLE':
@@ -393,4 +663,12 @@ function calculateButtonMessage(isReciever: boolean, selectableStatus: SelectSta
   }
 
   return ''
+}
+
+// Ex. convert 1980 to "YEN_MARK 1,980"
+function priceText(price: number | undefined): string {
+  if (price === undefined) {
+    return ''
+  }
+  return `${YEN_MARK}${price?.toLocaleString('en-US')}`
 }

@@ -1,57 +1,118 @@
 import React from 'react'
 
-import { Box, Stack } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
+import { Box, Stack, Typography } from '@mui/material'
 
-import { LANDING_USE_ITEM_LIST } from 'constants/index'
+import { styled } from '@mui/system'
 
-import { UseLaptopItem } from 'molecules'
+const List = styled(Stack)({
+  width: '100%',
+  position: 'relative',
+})
 
-const useStyles = makeStyles(() =>
-  createStyles({
-    list: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      zIndex: 2,
-    },
-    arrow: {
-      width: 25,
-    },
-    bottom: {
-      width: '100%',
-      height: '212px',
-      background:
-        'linear-gradient(102.49deg, #FFF3E9 -18.78%, #FFECDD -12.51%, #FFEAE7 56.55%, #EBE6FF 166.15%)',
-      marginTop: '-145px',
-    },
-  })
-)
+const ItemGroup = styled(Stack)({
+  gap: '68px',
+  width: '100%',
+  margin: '0 auto',
+  maxWidth: '1040px',
+})
+
+const Step = styled(Typography)({
+  fontFamily: 'Outfit',
+  fontSize: '24px',
+  fontWeight: 400,
+  lineHeight: 1,
+  letterSpacing: '0.1em',
+  textAlign: 'center',
+  background:
+    'linear-gradient(102.32deg, #FEAA69 -13.04%, #FF8B7B 51.48%, #927DED 153.9%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  width: 'fit-content',
+  marginTop: '30px',
+})
+
+const ItemWrap = styled(Stack)({
+  width: 'fit-content',
+  alignItems: 'center',
+})
+
+const ImageWrap = styled(Stack)({
+  width: '100%',
+  alignItems: 'center',
+  position: 'relative',
+  '& img': {
+    width: '220px',
+    zIndex: 10,
+  },
+})
+
+const ItemTitle = styled(Typography)({
+  marginTop: '10px',
+  fontFamily: 'Noto Sans JP',
+  fontSize: '20px',
+  fontWeight: 500,
+  lineHeight: '30px',
+  letterSpacing: '0.05em',
+  textAlign: 'center',
+  color: '#4A4A4A',
+  whiteSpace: 'nowrap',
+})
+
+const ImageBack = styled(Box)({
+  backgroundColor: '#F7F7F7',
+  position: 'absolute',
+  top: 82,
+  height: 250,
+  width: '65vw',
+})
 
 export const UseLaptop = () => {
-  const classes = useStyles()
-
   return (
-    <Stack mt={12}>
-      <Stack className={classes.list} gap={5} direction="row">
-        {LANDING_USE_ITEM_LIST.map((item, index) => (
-          <Stack gap={5} direction="row" key={index}>
-            <Box>
-              <UseLaptopItem item={item} number={index + 1} />
-            </Box>
-            {index + 1 < LANDING_USE_ITEM_LIST.length && (
-              <Stack alignItems="center" justifyContent="center">
-                <Box
-                  component="img"
-                  src="/assets/CaretDown.svg"
-                  className={classes.arrow}
-                />
-              </Stack>
-            )}
-          </Stack>
-        ))}
-      </Stack>
-      <Box className={classes.bottom}></Box>
+    <Stack mt={'95px'} gap={'190px'} display={{ md: 'flex', xs: 'none' }}>
+      <List gap={14}>
+        <ItemGroup direction="row" justifyContent="start">
+          {/* Item List*/}
+          <ItemWrap>
+            <ImageWrap>
+              <img src="/landing/use/image1.png" />
+            </ImageWrap>
+            <Step align="center">STEP1</Step>
+            <ItemTitle align="center">贈りたいギフトを3つまで選択</ItemTitle>
+          </ItemWrap>
+
+          <ItemWrap>
+            <ImageWrap>
+              <img src="/landing/use/image2.png" />
+            </ImageWrap>
+            <Step align="center">STEP2</Step>
+            <ItemTitle align="center">贈りたいお相手にリンクを送付</ItemTitle>
+          </ItemWrap>
+        </ItemGroup>
+        <ImageBack />
+      </List>
+
+      <List gap={14}>
+        <ItemGroup direction="row" justifyContent="end">
+          {/* Item List*/}
+          <ItemWrap>
+            <ImageWrap>
+              <img src="/landing/use/image3.png" />
+            </ImageWrap>
+            <Step align="center">STEP3</Step>
+            <ItemTitle align="center">ギフトを1つ選択、住所を入力</ItemTitle>
+          </ItemWrap>
+
+          <ItemWrap>
+            <ImageWrap>
+              <img src="/landing/use/image4.png" />
+            </ImageWrap>
+            <Step align="center">STEP4</Step>
+            <ItemTitle align="center">ギフトが選ばれたらお支払い</ItemTitle>
+          </ItemWrap>
+        </ItemGroup>
+        {/* Item List*/}
+        <ImageBack sx={{ right: 0 }} />
+      </List>
     </Stack>
   )
 }

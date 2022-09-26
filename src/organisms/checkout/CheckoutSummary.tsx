@@ -18,6 +18,7 @@ interface Props {
     productPrice: number
     minShipping: number
     maxShipping: number
+    defaultCollapse?: boolean
   }
 }
 
@@ -42,7 +43,7 @@ export const CheckoutSummaryLaptop = (props: Props) => {
 }
 
 export const CheckoutSummaryMobile = (props: Props) => {
-  const [opened, setOpened] = useState(false)
+  const [opened, setOpened] = useState<boolean>(props.priceTable.defaultCollapse === true)
   const toggle = () => setOpened(!opened)
 
   return (

@@ -1,33 +1,33 @@
 import React from 'react'
 
-import { useMediaQuery } from '@mui/material'
+import { Box, useMediaQuery } from '@mui/material'
 
-import makeStyles from '@mui/styles/makeStyles'
-
-import { LpHeader } from './LpHeader'
-import { LpFooter } from './components/LpFooter'
+import { MobileHeader } from './MobileHeader'
 import { HeroCover } from './HeroCover'
 import { Service } from './Service'
 import { Use } from './Use'
 import { Carousel } from './Carousel'
 import { Event } from './Event'
+import { Story } from './Story'
+import { MobileZeft } from './MobileZeft'
 
 import { StickyCTAButton } from './components/StickyCTAButton'
+import { MenuAppBar, Footer } from 'organisms'
+
+import { useRecommendProducts } from 'container/hooks/sender/useRecommendProducts'
 
 /*
  * custom hooks
  */
-const useStyles = makeStyles({
-  layout: {
-    position: 'relative',
-  },
-})
 
 const useSize = () => {
   const isLgSize = useMediaQuery('(max-width: 1200px)', { noSsr: true })
-  const isMdSize = useMediaQuery('(max-width: 1024px)', { noSsr: true })
+  const isMdSize = useMediaQuery('(max-width: 900px)', { noSsr: true })
   const isSmSize = useMediaQuery('(max-width: 767px)', { noSsr: true })
-  const isXsSize = useMediaQuery('(max-width: 350px)', { noSsr: true })
+  const isXsSize = useMediaQuery('(max-width: 450px)', {
+    noSsr: true,
+    defaultMatches: true,
+  })
   return { isLgSize, isMdSize, isSmSize, isXsSize }
 }
 
@@ -37,20 +37,26 @@ export type LpCommonProps = {
 }
 
 export const Layout: React.FC = () => {
-  const classes = useStyles()
-  const { isLgSize, isMdSize } = useSize()
+  const { isMdSize, isXsSize } = useSize()
+
+  const { productsInCart } = useRecommendProducts()
+  const howManyInCart = productsInCart.length
 
   return (
-    <div className={classes.layout}>
-      <LpHeader isMobileSize={isMdSize} />
-      <HeroCover />
-      <Service isMobileSize={isMdSize} />
-      <Use isMobileSize={isLgSize} />
+    <Box position="relative">
+      <MenuAppBar giftBoxButton={howManyInCart > 0} />
 
-      <Carousel />
-      <Event />
-      <LpFooter />
+      {isMdSize && <MobileHeader howManyInCart={howManyInCart} />}
+      <HeroCover isMobile={isXsSize} />
+      {isMdSize && <MobileZeft />}
+      {!isMdSize && <Service isMdSize={isMdSize} />}
+      <Use isMdSize={isMdSize} />
+      <Carousel howManyInCart={howManyInCart} isMdSize={isMdSize} />
+      <Story />
+      <Event howManyInCart={howManyInCart} />
+
+      <Footer />
       {isMdSize && <StickyCTAButton isShown={true} />}
-    </div>
+    </Box>
   )
 }

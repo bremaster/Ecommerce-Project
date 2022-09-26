@@ -1,39 +1,65 @@
 import React from 'react'
-import { Box, AppBar, Theme } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import { Logo } from 'atoms/Logo'
-import { BackButton } from 'atoms/BackButton'
 
-const useStyles = makeStyles((theme: Theme) => ({
-  root: {
-    flexGrow: 1,
-    width: '100%',
-    position: 'relative',
+import { Box, Theme, useMediaQuery } from '@mui/material'
+import { styled } from '@mui/system'
+
+import { AppBarLaptop, AppBarMobile } from 'molecules'
+
+import { useRecommendProducts } from 'container/hooks/sender/useRecommendProducts'
+
+const MenuWrap = styled(Box)((props) => ({
+  flexGrow: 1,
+  width: '100%',
+  position: 'relative',
+  height: '64px',
+  borderBottom: '1px solid rgb(233, 236, 237)',
+  zIndex: 30,
+  [props.theme.breakpoints.up('md')]: {
+    height: '100px',
   },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  title: {
-    flexGrow: 1,
+  '& header': {
+    height: '100%',
   },
 }))
 
 interface Props {
-  /** if true, history back button is displayed at left */
-  backButton?: boolean
+  /** if true, git box (cart) button is displayed at left */
+  giftBoxButton?: boolean
+  /** if navigate to lp */
+  navigateToLp?: boolean
+  /** if show CTA */
+  cta?: boolean
+  isPreview?: boolean
 }
 
-export const MenuAppBar: React.FC<Props> = ({ backButton = false }) => {
-  const classes = useStyles()
+export const MenuAppBar: React.FC<Props> = ({
+  giftBoxButton = false,
+  navigateToLp = true,
+  cta = false,
+  isPreview,
+}) => {
+  const isLaptop = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'), {
+    defaultMatches: false,
+  })
+
+  const { productsInCart } = useRecommendProducts()
 
   return (
-    <div className={classes.root}>
-      <AppBar position="static" color="transparent" elevation={0}>
-        {backButton && <BackButton position="top" />}
-        <Box display="flex" flexDirection="column" alignItems="center" mt={1} mb={2}>
-          <Logo />
-        </Box>
-      </AppBar>
-    </div>
+    <MenuWrap>
+      {isLaptop ? (
+        <AppBarLaptop
+          giftBoxButton={giftBoxButton && !isPreview}
+          howManyInCart={productsInCart.length}
+          navigateToLp={navigateToLp}
+          cta={cta}
+        />
+      ) : (
+        <AppBarMobile
+          giftBoxButton={giftBoxButton && !isPreview}
+          howManyInCart={productsInCart.length}
+          navigateToLp={navigateToLp}
+        />
+      )}
+    </MenuWrap>
   )
 }

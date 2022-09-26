@@ -1,39 +1,46 @@
 import React, { FC } from 'react'
-import { FormInputField } from 'atoms/FormInputField'
+import { FormInputField } from 'atoms'
 import { Typography, Box, InputLabel, TextFieldProps } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import { COLOR } from 'theme'
 
-const useStyles = makeStyles({
-  rowRoot: {
-    '& input': {
-      border: 'none',
-      height: '20px',
-      letterSpacing: '0',
-      fontSize: '16px',
-    },
-    '& #alert': {
-      color: COLOR.alertRed,
-      fontSize: '12px',
-      paddingTop: '8px',
-    },
-    '& .MuiFormLabel-root': {
-      color: '#4A4A4A',
-      fontFamily: "'Noto Sans JP'",
-      fontStyle: 'normal',
-      fontWeight: 400,
-      fontSize: '16px',
-      marginBottom: '0',
-      lineHeight: '32px',
-    },
+import { styled } from '@mui/system'
+
+const RowRoot = styled(Box)({
+  '& input': {
+    border: 'none',
+    height: '20px',
+    letterSpacing: '0',
+    fontSize: '16px',
+  },
+  '& #alert': {
+    color: '#FE8B7B',
+    fontSize: '12px',
+  },
+  '& .MuiFormLabel-root': {
+    color: '#4A4A4A',
+    fontFamily: "'Noto Sans JP'",
+    fontStyle: 'normal',
+    fontWeight: 400,
+    fontSize: '16px',
+    marginBottom: '0',
+    lineHeight: '32px',
+  },
+  '& span': {
+    color: '#FE8B7B',
+    fontFamily: 'Noto Sans JP',
+    fontSize: '16px',
+    fontWeight: 700,
+    lineHeight: '32px',
+    letterSpacing: '0.03em',
+    textAlign: 'left',
   },
 })
 
 export type Props = {
-  register: React.Ref<unknown>
+  register?: React.Ref<unknown>
   invalid: boolean
   errorMessage: string
   mb?: string
+  required?: boolean
 } & TextFieldProps
 
 export const FormRow: FC<Props> = ({
@@ -47,19 +54,27 @@ export const FormRow: FC<Props> = ({
   errorMessage,
   placeholder,
   mb = '24px',
+  required = false,
   ...rest
 }) => {
-  const classes = useStyles()
-
   return (
-    <Box mb={mb} className={classes.rowRoot}>
-      <InputLabel shrink htmlFor={id}>
-        {label}
+    <RowRoot
+      mb={mb}
+      sx={{
+        '& input': {
+          border: `2px solid ${invalid ? '#FE8B7B' : '#FFF'} !important`,
+        },
+        '& textarea': {
+          border: `2px solid ${invalid ? '#FE8B7B' : '#FFF'} !important`,
+        },
+      }}
+    >
+      <InputLabel shrink id={`title_${id}`} htmlFor={id}>
+        {label} {required && <span>（必須）</span>}
       </InputLabel>
       <FormInputField
         inputRef={register}
         fullWidth
-        required
         value={value}
         onChange={onChange}
         type={type}
@@ -70,6 +85,6 @@ export const FormRow: FC<Props> = ({
         {...rest}
       ></FormInputField>
       {invalid && <Typography id="alert">{errorMessage}</Typography>}
-    </Box>
+    </RowRoot>
   )
 }

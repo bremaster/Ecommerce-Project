@@ -61,7 +61,7 @@ const COLLABORATOR_PROFILE: Collaborators = {
             innerText: 'ギフトが届きました。',
           },
           mainMessageWhenMultiGifts: {
-            innerText: 'ギフトが届きました。',
+            innerText: 'ギフトを開封しました',
           },
           subMessageWhenMultiGifts: {
             innerText: '{0}つのうち1つを選んで受取り手続きに進んでください。',

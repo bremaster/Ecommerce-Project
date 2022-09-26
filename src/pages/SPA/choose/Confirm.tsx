@@ -55,7 +55,7 @@ export const GiftConfirm = ({
 }: Props) => {
   return (
     <Layout>
-      <MenuAppBar backButton={true} />
+      <MenuAppBar />
       <div css={{ width: '100%', marginTop: '2rem' }}>
         <Section head="選択中のギフト">
           <Fragment>

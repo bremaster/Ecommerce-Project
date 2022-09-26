@@ -2,86 +2,85 @@
 import { jsx } from '@emotion/core'
 import React, { useState, useEffect } from 'react'
 import { Box, Typography, TextField } from '@mui/material'
-import withStyles from '@mui/styles/withStyles'
-import makeStyles from '@mui/styles/makeStyles'
 import { SquareButton } from 'atoms'
 import { MenuAppBar } from 'organisms'
 import { Layout } from 'templates/Layout'
 import { COLOR } from 'theme'
 
-const MessageField = withStyles({
-  root: {
-    '& .MuiFilledInput-root': {
-      backgroundColor: COLOR.formGrey,
-    },
-    '& label.Mui-focused': {
-      color: COLOR.formGrey,
-    },
-    '& .MuiFilledInput-multiline': {
-      padding: '10px',
-    },
-    '& .MuiInputBase-inputMultiline': {
-      fontSize: '12px',
-    },
-    '& .MuiFilledInput-underline:before': {
-      borderBottom: 'none',
-    },
-    '& .MuiFilledInput-underline:after': {
-      borderBottom: 'none',
-    },
-  },
-})(TextField)
+import { styled } from '@mui/system'
 
-const useStyles = makeStyles({
-  messageCount: {
-    paddingTop: '4px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    color: 'gray',
-    '& p': {
-      textAlign: 'end',
-      fontSize: '12px',
-      letterSpacing: '1px',
-      marginBottom: 0,
-    },
+const MessageField = styled(TextField)({
+  '& .MuiFilledInput-root': {
+    backgroundColor: COLOR.formGrey,
   },
-  messageInvalid: {
-    color: COLOR.alertRed,
+  '& label.Mui-focused': {
+    color: COLOR.formGrey,
   },
-  selectedGiftHeader: {
+  '& .MuiFilledInput-multiline': {
+    padding: '10px',
+  },
+  '& .MuiInputBase-inputMultiline': {
+    fontSize: '12px',
+  },
+  '& .MuiFilledInput-underline:before': {
+    borderBottom: 'none',
+  },
+  '& .MuiFilledInput-underline:after': {
+    borderBottom: 'none',
+  },
+})
+
+const MessageCount = styled(Box)({
+  paddingTop: '4px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  color: 'gray',
+  '& p': {
+    textAlign: 'end',
+    fontSize: '12px',
+    letterSpacing: '1px',
+    marginBottom: 0,
+  },
+})
+
+const SelectedGiftHeader = styled(Typography)({
+  fontSize: '14px',
+  fontWeight: 700,
+  lineHeight: '30px',
+})
+
+const SelectedGiftBox = styled(Box)({
+  display: 'flex',
+  border: `solid 1px ${COLOR.borderGray}`,
+  borderRadius: '4px',
+})
+
+const SelectedGiftImg = styled('img')({
+  flex: 1,
+  maxWidth: '85px',
+})
+
+const SelectedGiftDescription = styled(Box)({
+  flex: 3,
+  padding: '13px 10px',
+  '& h6': {
+    letterSpacing: '1px',
     fontSize: '14px',
     fontWeight: 700,
-    lineHeight: '30px',
+    margin: '0 0 4px 0',
   },
-  selectedGiftBox: {
-    display: 'flex',
-    border: `solid 1px ${COLOR.borderGray}`,
-    borderRadius: '4px',
-  },
-  selectedGiftImg: {
-    flex: 1,
-    maxWidth: '85px',
-  },
-  selectedGiftDescription: {
-    flex: 3,
-    padding: '13px 10px',
-    '& h6': {
-      letterSpacing: '1px',
-      fontSize: '14px',
-      fontWeight: 700,
-      margin: '0 0 4px 0',
-    },
-  },
-  selectedGiftBrandName: {
-    fontSize: '10px',
-    margin: 0,
-    color: COLOR.brandNameGray,
-    letterSpacing: '1px',
-  },
-  selectedGiftPrice: {
-    margin: '0 0 6px 0',
-    fontSize: '10px',
-  },
+})
+
+const SelectedGiftBrandName = styled('p')({
+  fontSize: '10px',
+  margin: 0,
+  color: COLOR.brandNameGray,
+  letterSpacing: '1px',
+})
+
+const SelectedGiftPrice = styled('p')({
+  margin: '0 0 6px 0',
+  fontSize: '10px',
 })
 
 type Props = {
@@ -106,7 +105,6 @@ export const MessageForm = ({
   message,
   setMessage,
 }: Props) => {
-  const classes = useStyles()
   const [isMessageInvalid, setIsMessageInvalid] = useState(false)
   const maxMessageLength = 300
 
@@ -118,7 +116,7 @@ export const MessageForm = ({
 
   return (
     <Layout>
-      <MenuAppBar backButton={true} />
+      <MenuAppBar />
       <Box width="100%">
         <Box pt={5} pb={3}>
           <Typography>メッセージを入力してください（任意）</Typography>
@@ -139,31 +137,29 @@ export const MessageForm = ({
             }
           />
         </Box>
-        <Box mb={4} className={classes.messageCount}>
+        <MessageCount mb={4}>
           <p>300文字以内</p>
           <Box>
             <p>{message.length} / 300</p>
             {isMessageInvalid ? (
-              <p className={classes.messageInvalid}>300文字を超えています</p>
+              <p style={{ color: COLOR.alertRed }}>300文字を超えています</p>
             ) : undefined}
           </Box>
-        </Box>
+        </MessageCount>
 
         {giftName && (
           <Box>
-            <Typography className={classes.selectedGiftHeader} variant="body2">
-              選択中のギフト
-            </Typography>
-            <Box className={classes.selectedGiftBox} mb={5}>
-              <img src={giftImage} className={classes.selectedGiftImg} />
-              <Box className={classes.selectedGiftDescription}>
+            <SelectedGiftHeader variant="body2">選択中のギフト</SelectedGiftHeader>
+            <SelectedGiftBox mb={5}>
+              <SelectedGiftImg src={giftImage} />
+              <SelectedGiftDescription>
                 <h6>{giftName}</h6>
-                <p className={classes.selectedGiftPrice}>
+                <SelectedGiftPrice>
                   {prices !== undefined && prices[0].col2}
-                </p>
-                <p className={classes.selectedGiftBrandName}>{giftBrand}</p>
-              </Box>
-            </Box>
+                </SelectedGiftPrice>
+                <SelectedGiftBrandName>{giftBrand}</SelectedGiftBrandName>
+              </SelectedGiftDescription>
+            </SelectedGiftBox>
           </Box>
         )}
         <SquareButton

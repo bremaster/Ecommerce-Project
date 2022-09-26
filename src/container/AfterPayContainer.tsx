@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
-import { Route, Switch, useRouteMatch, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 import { Box } from '@mui/material'
 
@@ -16,7 +16,6 @@ import { Head } from 'utilities/Head'
 import { QUERY_GET_PRODUCTS_BY_IDS } from 'container/hooks'
 
 export const AfterPayContainer: React.FC = () => {
-  const match = useRouteMatch()
   const { token: giftToken, error: giftTokenError } = useGiftToken()
   const [paymentIntent, paymentIntentError] = usePaymentIntent(giftToken)
   const [product, productError] = useProductInfo(paymentIntent?.productId)
@@ -26,7 +25,11 @@ export const AfterPayContainer: React.FC = () => {
     return <ErrorPage body={giftTokenError} />
   }
   if (paymentIntentError !== null) {
-    return <ErrorPage header="Sorry" body={paymentIntentError.detail} />
+    const header =
+      paymentIntentError.detail === 'すでにお支払いずみのようです。'
+        ? 'Thank You'
+        : 'Sorry'
+    return <ErrorPage header={header} body={paymentIntentError.detail} />
   }
   if (productError !== '') {
     return <ErrorPage header="Sorry" body={productError} />
@@ -44,27 +47,38 @@ export const AfterPayContainer: React.FC = () => {
   }
 
   return (
-    <Switch>
+    <Routes>
       {/* After Pay top page */}
-      <Route exact path={`${match.path}`}>
-        <Head title="お支払い ｜ ZEFT ゼフト" />
-        <CheckOut
-          item={{
-            name: product.title,
-            brand: product.brand.brandName,
-            photo: product.productImageCloudinary[0].secure_url,
-          }}
-          productPrice={paymentIntent.productPrice}
-          shippingFee={paymentIntent.shippingFee}
-          paymentClientSecret={paymentIntent.clientSecret}
-        />
-      </Route>
+      <Route
+        index
+        element={
+          <React.Fragment>
+            <Head title="お支払い ｜ ZEFT ゼフト" />
+            <CheckOut
+              item={{
+                name: product.title,
+                brand: product.brand.brandName,
+                photo: product.productImageCloudinary[0].secure_url,
+                noshiOk: product.noshi === true,
+              }}
+              productPrice={paymentIntent.productPrice}
+              shippingFee={paymentIntent.shippingFee}
+              paymentClientSecret={paymentIntent.clientSecret}
+            />
+          </React.Fragment>
+        }
+      />
       {/* Other routes */}
-      <Route>
-        <Head title="エラー｜ZEFT ゼフト"></Head>
-        <ErrorPage />
-      </Route>
-    </Switch>
+      <Route
+        path="*"
+        element={
+          <React.Fragment>
+            <Head title="エラー｜ZEFT ゼフト"></Head>
+            <ErrorPage />
+          </React.Fragment>
+        }
+      />
+    </Routes>
   )
 }
 

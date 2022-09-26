@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { Box, Grid, Typography } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
 import { animated } from 'react-spring'
 
 import { AnswerButton } from 'atoms/AnswerButton'
@@ -9,22 +8,23 @@ import { AnswerImage } from 'atoms/AnswerImage'
 import { AnswerCircleGroup } from 'organisms/AnswerCircleGroup'
 import { AnswerWithHandler } from 'constants/index'
 
+import { styled } from '@mui/system'
+
 // animation hook is available only in `animated` component
 // https://www.react-spring.io/docs/hooks/basics
 const AnimatedBox = animated(Box)
 
-const useStyles = makeStyles({
-  imageText: {
-    textAlign: 'center',
-    fontSize: '0.9rem',
-  },
-  tipSection: {
-    marginTop: '4rem',
-    '& > span': {
-      fontSize: '13.5px',
-      fontWeight: '700',
-      borderBottom: 'solid 1px',
-    },
+const ImageText = styled(Typography)({
+  textAlign: 'center',
+  fontSize: '0.9rem',
+})
+
+const TipSection = styled(Typography)({
+  marginTop: '4rem',
+  '& > span': {
+    fontSize: '13.5px',
+    fontWeight: '700',
+    borderBottom: 'solid 1px',
   },
 })
 
@@ -45,7 +45,6 @@ const QuizContent = ({
   showQuiz = true,
   tip = '',
 }: QuizContentProps) => {
-  const classes = useStyles()
   // WARN: もし useChain でクイズ文のあとに実行しても、２回目以降はクイズ文のアニメーションが走らない
 
   return (
@@ -68,7 +67,7 @@ const QuizContent = ({
                       image={answer.imageUrl as string}
                     />
                   </Box>
-                  <Typography className={classes.imageText}>{answer.title}</Typography>
+                  <ImageText>{answer.title}</ImageText>
                 </AnimatedBox>
               </Grid>
             ))}
@@ -92,9 +91,9 @@ const QuizContent = ({
         )}
       </Box>
       {!!tip && (
-        <Typography className={classes.tipSection}>
+        <TipSection>
           <span>{tip}</span>
-        </Typography>
+        </TipSection>
       )}
     </React.Fragment>
   )

@@ -1,109 +1,205 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
-import { Box, Typography, Divider } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import { SquareButton } from 'atoms'
+import { useForm } from 'react-hook-form'
+import { GradientButton } from 'atoms'
+import { MenuAppBar, Footer, Card } from 'organisms'
 import { Layout } from 'templates/Layout'
-import { COLOR } from 'theme'
+import { Box, Typography, Divider, Stack } from '@mui/material'
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+import { COLOR } from 'theme'
+import { formatPhoneNumber } from 'utilities/formatPhoneNumber'
+
+import { styled } from '@mui/system'
+
+const Section = styled(Typography)({
+  fontSize: '14px',
+  fontWeight: 700,
+})
+
+const StyledDivider = styled(Divider)((props) => ({
+  borderColor: COLOR.subtleGray,
+  width: '100vw',
+  maxWidth: props.theme.breakpoints.values.md,
+  marginTop: props.theme.spacing(3),
+  marginBottom: props.theme.spacing(3),
+}))
+
+const Label = styled(Typography)((props) => ({
+  fontFamily: 'Noto Sans JP',
+  fontSize: '14px',
+  fontWeight: 700,
+  lineHeight: '25px',
+  letterSpacing: '0.03em',
+  textAlign: 'left',
+  color: '#4A4A4A',
+  width: '25%',
+  [props.theme.breakpoints.down('md')]: {
     width: '100%',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing(1),
-  },
-  changeButton: {
-    fontSize: '12px',
-    color: COLOR.subOrange,
-    borderBottom: `1px solid ${COLOR.subOrange}`,
-    lineHeight: '13px',
-    cursor: 'pointer',
-  },
-  info: {
-    lineHeight: '1rem',
-    marginBottom: '3rem',
-    '& MuiTypography-root': {
-      fontSize: '14px',
-    },
-  },
-  title: {
-    textAlign: 'center',
-    padding: '23px 0',
-    fontWeight: 700,
-    fontSize: '18px',
-    letterSpacing: '0.05em',
-  },
-  section: {
-    fontSize: '16px',
-    fontWeight: 700,
-  },
-  divider: {
-    borderColor: COLOR.subtleGray,
-    width: '100vw',
-    maxWidth: theme.breakpoints.values.md,
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(3),
   },
 }))
 
+const Value = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  fontSize: '13px',
+  fontWeight: 400,
+  lineHeight: '23px',
+  letterSpacing: '0.03em',
+  textAlign: 'left',
+  color: '#4A4A4A',
+})
+
 type Props = {
-  postalCode?: string
-  address?: string
-  name?: string
+  recieverName?: string
   email?: string
+  postalCode?: string
+  prefecture?: string
+  address1?: string
+  address2?: string
   phoneNumber?: string
-  handleBackButton: () => void
-  handleNextButton: () => void
-  children: React.ReactNode
+  onClickNextButton: () => void
+  isPreview?: boolean
+  children?: React.ReactNode
 }
 
 export const AddressConfirm: React.FC<Props> = ({
-  postalCode = '1450594',
-  address = '仙台市青葉区２−２２−１０３',
-  name = '斉藤 依紗',
-  email = 'youremail@gmail.com',
-  phoneNumber = '070-1234-5678',
-  handleBackButton = () => console.log('back'),
-  handleNextButton = () => console.log('next'),
+  recieverName,
+  email,
+  postalCode,
+  prefecture,
+  address1,
+  address2,
+  phoneNumber,
+  onClickNextButton,
+  isPreview = false,
   children,
 }) => {
-  const classes = useStyles()
+  const { handleSubmit } = useForm({
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
+  })
+
+  const onSubmit = () => {
+    onClickNextButton()
+  }
+
+  // タップした後に、初期位置が下の方になるのを防ぐため
+  // グローバルに設定しても良いかも
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  if (isPreview) {
+    return (
+      <Layout maxWidth="md">
+        {/* gift info */}
+        <Box width="100%" mb={1} mt={2}>
+          <Section>お受取りギフト</Section>
+        </Box>
+        {children}
+
+        <StyledDivider />
+
+        {/* reciever info */}
+        <Box width="100%" mb={1}>
+          <Section my="3rem">
+            以降でギフトの貰い主様に配送先の住所などを入力いただき完了となります。
+          </Section>
+        </Box>
+      </Layout>
+    )
+  }
 
   return (
-    <Layout>
-      <Typography className={classes.title}>お届け先情報の確認</Typography>
+    <>
+      <MenuAppBar giftBoxButton={false} navigateToLp={false} />
+      <Layout maxWidth="md">
+        <PageTitle />
 
-      {/* gift info */}
-      <Box width="100%" mb={1} mt={2}>
-        <Typography className={classes.section}>お受取りギフト</Typography>
-      </Box>
-      {children}
+        {/* gift info */}
+        <Card num={1} header="選んだギフト" width="100%" mb="2rem">
+          {children}
+        </Card>
 
-      <Divider className={classes.divider} />
+        <form key={2} onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
+          <Card num={2} header="お届け先情報" width="100%">
+            <Stack gap={{ md: 1.5, xs: 1 }} mb={{ md: '35px', xs: '13px' }}>
+              <Stack direction={{ md: 'row', xs: 'column' }}>
+                <Label>お名前</Label>
+                <Value>{recieverName}</Value>
+              </Stack>
 
-      {/* reciever info */}
-      <div className={classes.root}>
-        <Box className={classes.header}>
-          <Typography className={classes.section}>お届け先情報</Typography>
-          <Typography className={classes.changeButton} onClick={handleBackButton}>
-            変更する
-          </Typography>
-        </Box>
-        <Box className={classes.info}>
-          <Typography>{name}</Typography>
-          <Typography>{phoneNumber}</Typography>
-          <Typography>{email}</Typography>
-          <Typography>{postalCode}</Typography>
-          <Typography>{address}</Typography>
-        </Box>
-        <SquareButton buttonType="primary" fullWidth={true} onClick={handleNextButton}>
-          確定する
-        </SquareButton>
-      </div>
-    </Layout>
+              <Divider />
+
+              <Stack direction={{ md: 'row', xs: 'column' }}>
+                <Label>メールアドレス</Label>
+                <Value>{email}</Value>
+              </Stack>
+
+              <Divider />
+
+              <Stack direction={{ md: 'row', xs: 'column' }}>
+                <Label>電話番号</Label>
+                <Value>{formatPhoneNumber(phoneNumber)}</Value>
+              </Stack>
+
+              <Divider />
+
+              <Stack direction={{ md: 'row', xs: 'column' }}>
+                <Label>郵便番号</Label>
+                <Value>
+                  〒{postalCode && postalCode.slice(0, 3) + '-' + postalCode.slice(3)}
+                </Value>
+              </Stack>
+
+              <Divider />
+
+              <Stack direction={{ md: 'row', xs: 'column' }}>
+                <Label>住所</Label>
+                <Value>
+                  {prefecture ? prefecture : ''}
+                  {address1} {address2 ? address2 : ''}
+                </Value>
+              </Stack>
+            </Stack>
+          </Card>
+          <Box width="100%" my="3rem">
+            <GradientButton type="submit">ギフトを受け取る</GradientButton>
+          </Box>
+        </form>
+      </Layout>
+      <Footer />
+    </>
   )
 }
+
+const PageTitle = () => (
+  <Stack direction="column" alignItems="center" py="60px">
+    <Typography
+      sx={{
+        fontFamily: "'Outfit'",
+        fontStyle: 'normal',
+        fontWeight: 600,
+        fontSize: '28px',
+        lineHeight: '35px',
+        textAlign: 'center',
+        color: '#4A4A4A',
+        marginBottom: '0.5rem',
+      }}
+    >
+      入力内容の確認
+    </Typography>
+    <Typography
+      sx={{
+        fontFamily: "'Outfit'",
+        fontStyle: 'normal',
+        fontWeight: 600,
+        fontSize: '14px',
+        lineHeight: '18px',
+        letterSpacing: '0.05em',
+        color: '#4A4A4A',
+      }}
+    >
+      confirmation
+    </Typography>
+  </Stack>
+)

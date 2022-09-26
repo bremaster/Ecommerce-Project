@@ -18,11 +18,11 @@ export const TermsOfService: React.FC = () => (
       },
     }}
   >
-    <a href="/documents/ZEFT利用規約.pdf" target="_blank">
+    <a href="/term" target="_blank">
       利用規約
     </a>
     および
-    <a href="/documents/ZEFTプライバシーポリシー.pdf" target="_blank">
+    <a href="/privacy" target="_blank">
       プライバシーポリシー
     </a>
     をご確認・ご同意の上でお進みください。

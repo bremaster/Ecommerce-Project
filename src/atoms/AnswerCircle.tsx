@@ -1,8 +1,9 @@
 import React, { FC } from 'react'
-import { Theme, Typography, Box } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
+import { Typography, Box } from '@mui/material'
 import IconButton from '@mui/material/IconButton'
 import { COLOR } from 'theme'
+
+import { styled } from '@mui/system'
 
 export const sizeMap = {
   small: '30px',
@@ -18,14 +19,14 @@ export type AnswerProps = {
   description?: string | null
 } & StyleProps
 
-const useStyles = makeStyles<Theme, StyleProps>({
-  buttonStyle: ({ size }) => ({
+const StyledIconButton = styled(IconButton)((props: StyleProps) => {
+  return {
     color: COLOR.textBlack,
     border: `2px solid  ${COLOR.primaryNavy}`,
     boxSizing: 'border-box',
-    minWidth: sizeMap['small'],
-    width: sizeMap[size],
-    height: sizeMap[size],
+    minWidth: sizeMap[props.size ? props.size : 'small'],
+    width: sizeMap[props.size ? props.size : 'small'],
+    height: sizeMap[props.size ? props.size : 'small'],
     '&:hover': {
       backgroundColor: COLOR.quizoutlineGray,
     },
@@ -35,20 +36,15 @@ const useStyles = makeStyles<Theme, StyleProps>({
     '&:focus': {
       outline: 'none',
     },
-  }),
+  }
 })
 
 export const AnswerCircle: FC<AnswerProps> = (props) => {
   const { onClick, size, description } = props
-  const classes = useStyles({ size })
 
   return (
     <Box textAlign="center">
-      <IconButton
-        size={size}
-        className={classes.buttonStyle}
-        onClick={onClick}
-      ></IconButton>
+      <StyledIconButton size={size} onClick={onClick}></StyledIconButton>
       <Box mt={3}>
         <Typography>{description}</Typography>
       </Box>

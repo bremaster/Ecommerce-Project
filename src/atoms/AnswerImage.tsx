@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Button } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
 import { Skeleton } from '@mui/material'
 import { COLOR } from 'theme'
 import { useAspectRatio } from 'utilities/CommonHooks'
+
+import { styled } from '@mui/system'
 
 interface Props {
   /** image URL */
@@ -15,6 +16,7 @@ interface Props {
   /** size of image */
   width?: string
 }
+
 const defaultPropsValue: Props = {
   image: 'https://picsum.photos/id/237/200/300',
   handleClick: () => {
@@ -24,30 +26,29 @@ const defaultPropsValue: Props = {
   width: '100%',
 }
 
-const useStyles = makeStyles({
-  img: {
-    width: '100%',
-    objectFit: 'cover',
-    /* aspectRatio: '1', */
-    borderRadius: '0.5rem',
-    border: `1px solid ${COLOR.quizoutlineGray}`,
-    cursor: 'pointer',
-  },
-  skeleton: {
-    width: '100%',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-  },
-  textButton: {
-    marginTop: '0.3rem',
-    '& .MuiButton-label': {
-      letterSpacing: '0.15rem !important', // overwrite default letter spacing
-    },
+const StyledImg = styled('img')({
+  width: '100%',
+  objectFit: 'cover',
+  /* aspectRatio: '1', */
+  borderRadius: '0.5rem',
+  border: `1px solid ${COLOR.quizoutlineGray}`,
+  cursor: 'pointer',
+})
+
+const StyledSkeleton = styled(Skeleton)({
+  width: '100%',
+  borderRadius: '0.5rem',
+  cursor: 'pointer',
+})
+
+const TextButton = styled(Button)({
+  marginTop: '0.3rem',
+  '& .MuiButton-label': {
+    letterSpacing: '0.15rem !important', // overwrite default letter spacing
   },
 })
 
 export const AnswerImage = (props: Props): JSX.Element => {
-  const classes = useStyles()
   const squareRatioRef = useAspectRatio<HTMLImageElement>(1.0)
   const [isSrcLoaded, setIsSrcLoaded] = useState(false)
 
@@ -73,26 +74,12 @@ export const AnswerImage = (props: Props): JSX.Element => {
       mx="auto"
     >
       {isSrcLoaded ? (
-        <img
-          className={classes.img}
-          src={props.image}
-          onClick={props.handleClick}
-          ref={squareRatioRef}
-        />
+        <StyledImg src={props.image} onClick={props.handleClick} ref={squareRatioRef} />
       ) : (
-        <Skeleton
-          variant="rectangular"
-          className={classes.skeleton}
-          ref={squareRatioRef}
-        ></Skeleton>
+        <StyledSkeleton variant="rectangular" ref={squareRatioRef}></StyledSkeleton>
       )}
-      {props.label && (
-        <Button className={classes.textButton} onClick={props.handleClick}>
-          {props.label}
-        </Button>
-      )}
+      {props.label && <TextButton onClick={props.handleClick}>{props.label}</TextButton>}
     </Box>
   )
 }
-
 AnswerImage.defaultProps = defaultPropsValue

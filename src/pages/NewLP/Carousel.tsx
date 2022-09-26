@@ -1,176 +1,207 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { Box, Stack } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
+import { Box, Stack, Typography } from '@mui/material'
 
-import Slider from "react-slick"
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
+import { styled } from '@mui/system'
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    wrapper: {
-      marginBottom: '200px',
-      [theme.breakpoints.down(1000)]: {
-        marginTop: '200px',
-      },
-    },
-    carouselItem: {
-      width: '246px !important',
-      height: '178px',
-      padding: '0 12px',
-      overflow: 'hidden',
-      '& div': {
-        borderRadius: '10px',
-        width: '100%',
-        height: '100%',
-        display: 'flex !important',
-        alignItems: 'center',
-        overflow: 'hidden',
-      },
-      '& img': {
-        width: '100%',
-        height: 'fit-content'
-      },
-      [theme.breakpoints.down(1000)]: {
-        width: '166px !important',
-        height: '118px',
-      }
+import Slider from 'react-slick'
+import 'slick-carousel/slick/slick-theme.css'
+import 'slick-carousel/slick/slick.css'
+
+import { CommonTitle } from './components/CommonTitle'
+import { GradientButton } from './components/GradientButton'
+import { TitleWrap } from './components/TitleWrap'
+
+const CarouselItem = styled(Box)({
+  width: '240px !important',
+  height: '286px',
+  padding: '0 10px',
+  overflow: 'hidden',
+  borderRadius: '10px',
+  '& div': {
+    width: '100%',
+    height: '100%',
+    display: 'flex !important',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  '& img': {
+    width: '220px !important',
+    height: '220px',
+    borderRadius: '30px',
+    cursor: 'pointer',
+  },
+})
+
+const ItemText = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  fontSize: '14px',
+  fontWeight: 700,
+  lineHeight: '21px',
+  letterSpacing: '0.08em',
+  textAlign: 'center',
+  color: '#4A4A4A',
+})
+
+const Wrap = styled(Box)((props) => ({
+  position: 'relative',
+  overflow: 'hidden',
+  marginTop: '177px',
+  [props.theme.breakpoints.down(900)]: {
+    marginTop: 0,
+  },
+}))
+
+const SliderWrap = styled(Box)((props) => ({
+  paddingTop: '100px',
+  [props.theme.breakpoints.down(900)]: {
+    paddingTop: '50px',
+  },
+}))
+
+export type CarouselProps = {
+  howManyInCart: number
+  isMdSize: boolean
+}
+
+export const Carousel = ({ howManyInCart, isMdSize }: CarouselProps) => {
+  const navigate = useNavigate()
+
+  const goToChoose = () => {
+    if (howManyInCart === 0) {
+      navigate('/product/onboarding')
+    } else {
+      navigate('/product/choose')
     }
-  })
-)
-
-export const Carousel = () => {
-  const classes = useStyles()
+  }
 
   const settings = {
-    className: "slider variable-width",
+    className: 'slider variable-width',
     infinite: true,
     speed: 500,
-    slidesToShow: 6,
     slidesToScroll: 2,
     variableWidth: true,
+    autoplay: true,
     autoplaySpeed: 2000,
     speedplaySpeed: 2000,
-    cssEase: "linear",
+    cssEase: 'linear',
     arrows: false,
-    responsive: [
-      {
-        breakpoint: 1500,
-        settings: {
-          slidesToShow: 4,
-          slidesToScroll: 4,
-        }
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 3,
-        }
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 2,
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1
-        }
-      }
-    ]
-  };
+    centerMode: true,
+  }
 
   return (
-    <Box className={classes.wrapper}>
-      <Slider {...settings}>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_0.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_1.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_2.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_3.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_4.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_5.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_6.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_7.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_8.jpg"
-            />
-          </Stack>
-        </Box>
-        <Box className={classes.carouselItem}>
-          <Stack direction="row">
-            <Box
-              component="img"
-              src="/landing/item_list/img_9.jpg"
-            />
-          </Stack>
-        </Box>
-      </Slider>
-    </Box>
+    <Wrap>
+      <TitleWrap>
+        <CommonTitle title="POPULAR GIFTS" subtitle="人気のギフト" />
+      </TitleWrap>
+
+      <SliderWrap>
+        <Slider {...settings}>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_0.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>スタイ Cercle2</ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_1.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>フライパンジュウ</ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_2.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>
+                  ハンドクレンザースプレー
+                  <br />
+                  3色セット
+                </ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_3.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>
+                  フロマージュ アグリューム
+                  <br />
+                  ケーキ 4号(12cm)
+                </ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_4.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>CBD WATER LOTION</ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_5.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>野菜のお塩【箱入り】</ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+          <CarouselItem>
+            <Stack justifyContent="space-between" gap={3}>
+              <Box
+                component="img"
+                src="/landing/item_list/img_6.webp"
+                onClick={goToChoose}
+              />
+              <Stack sx={{ height: '42px !important' }} justifyContent="center">
+                <ItemText>
+                  モン・プチ・プレジール8個
+                  <br />
+                  チョコレートセット
+                </ItemText>
+              </Stack>
+            </Stack>
+          </CarouselItem>
+        </Slider>
+      </SliderWrap>
+
+      {!isMdSize && (
+        <Stack alignItems="center" pt="147px">
+          <GradientButton />
+        </Stack>
+      )}
+    </Wrap>
   )
 }

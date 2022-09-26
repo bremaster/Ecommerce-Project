@@ -1,45 +1,42 @@
 import React from 'react'
 
 import { Box, Stack } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
-import { GradientButton } from './components/GradientButton'
-import { CommonTitle } from './components/CommonTitle'
 
 import { UseLaptop, UseMobile } from 'organisms'
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    wrapper: {
-      marginTop: '200px',
-    },
-    arrow: {
-      width: 25,
-    },
-    button: {
-      [theme.breakpoints.down(1000)]: {
-        display: 'none',
-      },
-    },
-  })
-)
+import { CommonTitle } from './components/CommonTitle'
+import { TitleWrap } from './components/TitleWrap'
+import { GradientButton } from './components/GradientButton'
 
-export type ServiceProps = {
-  isMobileSize: boolean
+import { styled } from '@mui/system'
+
+export type UseProps = {
+  isMdSize: boolean
 }
 
-export const Use = ({ isMobileSize }: ServiceProps) => {
-  const classes = useStyles()
+const UseWrap = styled(Box)((props) => ({
+  marginTop: '100px',
+  [props.theme.breakpoints.down(900)]: {
+    marginTop: '59px',
+  },
+}))
 
+export const Use = ({ isMdSize }: UseProps) => {
   return (
-    <Box className={classes.wrapper}>
-      <CommonTitle title="USES" subtitle="ZEFTのご利用イメージ" />
+    <UseWrap id="use">
+      {/* for SEO optimization, set <h2> tag */}
+      <TitleWrap>
+        <CommonTitle title="HOW TO USE" subtitle="ZEFTの使い方" />
+      </TitleWrap>
 
-      {isMobileSize ? <UseMobile /> : <UseLaptop />}
+      <UseMobile />
+      <UseLaptop />
 
-      <Stack className={classes.button} alignItems="center" py={22}>
-        <GradientButton />
-      </Stack>
-    </Box>
+      {!isMdSize && (
+        <Stack alignItems="center" pt="224px">
+          <GradientButton />
+        </Stack>
+      )}
+    </UseWrap>
   )
 }

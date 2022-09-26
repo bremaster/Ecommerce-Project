@@ -11,80 +11,99 @@ code {
 }
 
 /*******************video animation*******************/
-/* The animation code */
-@keyframes video {
-  0%   {left: 50%; top:50%;}
-  100% {left:50%; top:53%;}
-}
-
-/* The element to apply the animation to */
 .video-animation {
   animation-name: video;
   animation-duration: 3s;
 }
 
-/*******************letter animation*******************/
-/* The animation code */
-@keyframes letter {
-  0%   {left: 50%; top:0%; opacity: 0; width: 501px;}
-  100% {left:50%; top:40%; opacity: 1; width: 601px;}
+@keyframes video {
+  0%   {left: 50%; top:50%;}
+  100% {left:50%; top:53%;}
 }
 
-/* The element to apply the animation to */
+.letter_top__animation {
+  animation-name: letter_top__animation;
+  animation-duration: 4s;
+}
+
+@keyframes letter_top__animation {
+  0%   {padding-top:0; min-height: 200vh;}
+  100% {padding-top:6vh; min-height: 100vh;}
+}
+
 .letter__animation {
   animation-name: letter;
-  animation-duration: 2s;
+  animation-duration: 4s;
+}
+
+@keyframes letter {
+  0%   {margin-top:-70vh; opacity: 0; width: 401px;}
+  100% {margin-top:0%; opacity: 1; width: 601px}
+}
+
+.letter__body {
+  animation-name: letter__body;
+  animation-duration: 5s;
 }
 
 @keyframes letter__body {
-  0%   {width: 501px; height: 270px;}
-  100% {width: 601px; height: 350px;}
-}
-
-/* The element to apply the animation to */
-.letter__body {
-  animation-name: letter__body;
-  animation-duration: 2s;
-}
-
-@media only screen and (max-width: 700px) {
-  @keyframes letter__body {
-    0%   {width: 80%; height: 270px;}
-    100% {width: 100%; max-height: 350px;}
-  }
-  @keyframes letter {
-    0%   {left: 50%; top:0%; opacity: 0; width: 90%;}
-    100% {left:50%; top:35%; opacity: 1; width: 90%;}
-  }
-  @keyframes video {
-    0%   {left: 50%; top:58%;}
-    100% {left:50%; top:61%;}
-  }
-}
-
-/* The animation code */
-@keyframes letter_button {
   0%   {opacity: 0;}
-  70%   {opacity: 0;}
+  /*75%   {opacity: 0;}*/
   100% {opacity: 1;}
 }
 
-/* The element to apply the animation to */
-.letter__button {
-  animation-name: letter_button;
-  animation-duration: 3s;
+.text__font {
+  animation-name: text__font;
+  animation-duration: 5s;
 }
 
+@keyframes text__font {
+  0%   {font-size: 13px;}
+  100% {font-size: 17px;}
+}
 
-/**/
-/* The animation code */
+.letter__button {
+  animation-name: letter_button;
+  animation-duration: 5s;
+}
+
+@keyframes letter_button {
+  0%   {opacity: 0;}
+  80%   {opacity: 0;}
+  100% {opacity: 1;}
+}
+
+.catalogue__body {
+  animation-name: catalogue__body;
+  animation-duration: 2s;
+}
+
 @keyframes catalogue__body {
   0%   {opacity: 0; margin-top: 0;}
   100% {opacity: 1; margin-top: 5vh;}
 }
 
-/* The element to apply the animation to */
-.catalogue__body {
-  animation-name: catalogue__body;
-  animation-duration: 2s;
+.text__animation {
+  animation-name: text__animation;
+  animation-duration: 4s;
+}
+
+@keyframes text__animation {
+  0%   {width: 60%;}
+  100% {width: 80%;}
+}
+
+@media only screen and (max-width: 650px) {
+  @keyframes video {
+    0%   {left: 50%; top:58%;}
+    100% {left:50%; top:61%;}
+  }
+  @keyframes letter {
+    0%   {margin-top:-100vh; opacity: 0; width: 200px;}
+    100% {margin-top:0%; opacity: 1; width: 350px;}
+  }
+  @keyframes text__font {
+    0%   {font-size: 8px;}
+    100% {font-size: 13px;}
+  }
 }

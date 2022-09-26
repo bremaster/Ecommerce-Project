@@ -1,6 +1,6 @@
 import { useReducer, useState, useEffect } from 'react'
 
-import { useHistory, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 
 import { QUERY_GET_SURVEYS } from 'container/hooks'
@@ -19,7 +19,7 @@ export function useSurvey(): {
   answeredQuizIds: { [key: number]: string }
   loading: boolean
 } {
-  const history = useHistory()
+  const navigate = useNavigate()
   const { quizSetting } = useCollaboratorProfile()
   const { pathname } = useLocation()
   const [fetch, { loading, data }] = useLazyQuery<{ quiz: Quiz }>(QUERY_GET_SURVEYS)
@@ -60,11 +60,11 @@ export function useSurvey(): {
 
     dispatch({ page, answerId })
     if (nextQuiz === null) {
-      history.push(`../loading`)
+      navigate(`../loading`)
     } else if (nextQuiz.sys.id === PRICING_QUIZ_ID && quizSetting.shouldSkipPricingQuiz) {
-      history.push(`../loading`)
+      navigate(`../loading`)
     } else {
-      history.push(`./${page + 1}`)
+      navigate(`./${page + 1}`)
     }
   }
 

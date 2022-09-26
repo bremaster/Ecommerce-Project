@@ -1,28 +1,29 @@
 import React from 'react'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
-import Button from '@mui/material/Button'
 
-const useStyles = makeStyles(() =>
-  createStyles({
-    buttonStyle: {
-      background:
-        'linear-gradient(102.32deg, #FEAA69 -13.04%, #FF8B7B 51.48%, #927DED 153.9%)',
-      borderRadius: '10px',
-      color: 'white',
-      fontFamily: 'Noto Sans JP',
-      textAlign: 'center',
-      width: '300px',
-      height: '56px',
-    },
-  })
-)
+import { useNavigate } from 'react-router'
+import { GradientButton as CommonGradientButton } from 'atoms'
+
+import { useRecommendProducts } from 'container/hooks/sender/useRecommendProducts'
+import { useCtaInnerText } from '../hooks/useCtaInnerText'
 
 export const GradientButton = () => {
-  const classes = useStyles()
+  const navigate = useNavigate()
+  const ctaInnerText = useCtaInnerText()
+
+  const { productsInCart } = useRecommendProducts()
+  const howManyInCart = productsInCart.length
+
+  const goToApp = () => {
+    if (howManyInCart === 0) {
+      navigate('/product/onboarding')
+    } else {
+      navigate('/product/choose')
+    }
+  }
+
   return (
-    <Button className={classes.buttonStyle} variant="contained">
-      ギフトを選ぶ
-    </Button>
+    <CommonGradientButton width="300px" height="56px" onClick={goToApp}>
+      {ctaInnerText}
+    </CommonGradientButton>
   )
 }

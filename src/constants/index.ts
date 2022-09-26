@@ -1,10 +1,24 @@
+import { GiftScene } from './searchForm'
+
 export type ZeftCard = {
   Expires: string
   Message: string
   ProductIDList: Array<string>
-  Status: string
+  Status:
+    | 'VALID_AND_RECEIVED'
+    | 'VALID_AND_NOT_RECEIVED'
+    | 'EXPIRED_AND_RECEIVED'
+    | 'EXPIRED_AND_NOT_RECEIVED'
+  SelectedFinally: string
   To: string
   From: string
+}
+
+export type PreviewData = {
+  to: string
+  from: string
+  message: string
+  itemsInCart: Array<Product>
 }
 
 export type PaymentIntentResponse = {
@@ -72,6 +86,19 @@ export type Product = {
     items: {
       column1: string
       column2: string
+    }[]
+  }
+  variantsCollection: {
+    items: {
+      title: string
+      patternsCollection: {
+        items: {
+          title: string
+          imageCloudinary: null | Array<{
+            secure_url: string
+          }>
+        }[]
+      }
     }[]
   }
   scenes: string[]
@@ -165,48 +192,88 @@ export const GUIDE_ITEM_LIST = [
   },
 ]
 
-export const LANDING_SERVICE_ITEM_LIST = [
+export const SCENE_CONFIG_LIST: Array<{
+  id: string
+  title: GiftScene
+  iconBlackWhite: string
+  iconColored: string
+  metaTag: { title: string; description: string }
+}> = [
   {
-    image: '/landing/service/service1.svg',
-    title: '受け取り側が選べる。 決済は後から',
-    subtitle:
-      '贈り手が多種多様なギフトの中から3つまで選び、お相手に受取リンクを贈ります。受け取った方はその中から自分が一番欲しいと思うギフトを選び、受け取ることが出来ます。',
+    title: 'すべてのギフト',
+    iconBlackWhite: '/gift_icon/icon1.svg',
+    iconColored: '/gift_icon/sicon1.svg',
+    id: 'subeteNoGift',
+    metaTag: {
+      title: 'おすすめギフト一覧｜ZEFT ゼフト',
+      description:
+        'ギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。出産祝いののしにも対応しています。',
+    },
   },
   {
-    image: '/landing/service/service2.png',
-    title: '住所がなくても贈れる',
-    subtitle:
-      '贈り手は発行されたリンクをLINEやメールなどで送り、受け取ったお相手が配送先住所を入力します。住所を知らないお相手にもサプライズで贈ることが出来ます。',
+    title: '誕生日',
+    iconBlackWhite: '/gift_icon/cake-black.png',
+    iconColored: '/gift_icon/cake-color.png',
+    id: 'tanjobi',
+    metaTag: {
+      title: 'おすすめ誕生日ギフト一覧｜ZEFT ゼフト',
+      description:
+        'おしゃれでおすすめの誕生日で贈るギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。',
+    },
   },
   {
-    image: '/landing/service/service3.png',
-    title: '各ライフイベントの マナー等最適化',
-    subtitle:
-      '各ライフイベントページではマナー等に適した商品の選定やそのライフイベントに最適なのし紙（水引や表書きなど）を提案しています。迷いなくスムーズにギフトを贈ることが出来ます。',
+    title: 'お礼',
+    iconBlackWhite: '/gift_icon/thank-black.png',
+    iconColored: '/gift_icon/thank-color.png',
+    id: 'orei',
+    metaTag: {
+      title: 'おすすめお礼ギフト一覧｜ZEFT ゼフト',
+      description:
+        'おしゃれでおすすめのお礼で贈るギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。',
+    },
   },
   {
-    image: '/landing/service/service4.png',
-    title: '気持ちが伝わる開封体験',
-    subtitle:
-      '届いたリンクを開くとギフト包装を開封する高揚感のある体験がデジタル上のアニメーションで再現されています。またメッセージも添えてお相手にギフトを贈ることが出来ます。',
-  },
-]
-
-export const LANDING_USE_ITEM_LIST = [
-  {
-    image: '/landing/use/image1.png',
-    title: 'ギフト一覧から選択',
+    title: '結婚祝い',
+    iconBlackWhite: '/gift_icon/icon2.png',
+    iconColored: '/gift_icon/sicon2.png',
+    id: 'kekkonIwai',
+    metaTag: {
+      title: 'おすすめ結婚祝いギフト一覧｜ZEFT ゼフト',
+      description:
+        'おしゃれでおすすめの結婚祝いで贈るギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。結婚祝いののしにも対応しています。',
+    },
   },
   {
-    image: '/landing/use/image2.png',
-    title: 'メール認証し、ギフトリンクを発行',
+    title: '出産祝い',
+    iconBlackWhite: '/gift_icon/icon3.svg',
+    iconColored: '/gift_icon/sicon3.svg',
+    id: 'syussannIwai',
+    metaTag: {
+      title: 'おすすめ出産祝いギフト一覧｜ZEFT ゼフト',
+      description:
+        'おしゃれでおすすめの出産祝いで贈るギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。出産祝いののしにも対応しています。',
+    },
   },
   {
-    image: '/landing/use/image3.png',
-    title: 'メッセージとギフトを 受け取る',
+    title: '結婚内祝い',
+    iconBlackWhite: '/gift_icon/icon4.svg',
+    iconColored: '/gift_icon/sicon4.svg',
+    id: 'kekkonUchiIwai',
+    metaTag: {
+      title: 'おすすめ結婚内祝いギフト一覧｜ZEFT ゼフト',
+      description:
+        'おしゃれでおすすめの結婚内祝いで贈るギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。結婚内祝いののしにも対応しています。',
+    },
   },
   {
-    image: '/landing/use/image4.png',
-    title: '選ばれたギフトに 応じて後から決済',
+    title: '出産内祝い',
+    iconBlackWhite: '/gift_icon/icon5.svg',
+    iconColored: '/gift_icon/sicon5.svg',
+    id: 'syussannUchiIwai',
+    metaTag: {
+      title: 'おすすめ出産内祝いギフト一覧｜ZEFT ゼフト',
+      description:
+        'おしゃれでおすすめの出産内祝いで贈るギフトの一覧です。ZEFT（ゼフト）は選んだ3つの中から相手が選べるソーシャルギフトサービスです。出産内祝いののしにも対応しています。',
+    },
   },
 ]

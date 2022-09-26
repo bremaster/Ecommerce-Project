@@ -1,20 +1,6 @@
 import React from 'react'
 import { Box } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
 import { Tag } from 'atoms/Tag'
-
-const useStyles = makeStyles(() =>
-  createStyles({
-    taglist: {
-      paddingTop: '12px',
-    },
-    tag: {
-      paddingRight: '4px',
-      paddingBottom: '4px',
-    },
-  })
-)
 
 interface Props {
   /** tag list. ex.['aaa' ,'bb', 'asdf'] */
@@ -27,18 +13,11 @@ const defaultProps: Props = {
 
 const TagList: React.FC<Props> = (props) => {
   const { tags } = props
-  const classes = useStyles()
 
   return (
-    <Box
-      display="flex"
-      flexDirection="row"
-      alignItems="left"
-      flexWrap="wrap"
-      className={classes.taglist}
-    >
+    <Box display="flex" flexDirection="row" alignItems="left" flexWrap="wrap" pt={1.5}>
       {tags.map((t) => (
-        <Box className={classes.tag} key={t}>
+        <Box py={0.5} key={t}>
           <Tag>{t}</Tag>
         </Box>
       ))}

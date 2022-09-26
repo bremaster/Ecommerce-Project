@@ -9,14 +9,6 @@ import {
   Button,
 } from '@mui/material'
 
-import makeStyles from '@mui/styles/makeStyles'
-
-const useStyles = makeStyles({
-  message: {
-    whiteSpace: 'pre-line',
-  },
-})
-
 export const Alert = ({
   message,
   handleClose,
@@ -24,8 +16,6 @@ export const Alert = ({
   message: string
   handleClose: () => void
 }): JSX.Element => {
-  const classes = useStyles()
-
   return (
     <Dialog
       open={true}
@@ -35,7 +25,7 @@ export const Alert = ({
     >
       <DialogTitle id="alert-dialog-title">{'エラーが発生しました'}</DialogTitle>
       <DialogContent>
-        <DialogContentText id="alert-dialog-description" className={classes.message}>
+        <DialogContentText id="alert-dialog-description" sx={{ whiteSpace: 'pre-line' }}>
           {message}
         </DialogContentText>
       </DialogContent>

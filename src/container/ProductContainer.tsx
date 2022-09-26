@@ -1,37 +1,44 @@
 import React, { useState, useEffect } from 'react'
 
-import { Route, Switch, useRouteMatch, useHistory, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { Top } from 'pages/SPA/top/Top'
-import { Quiz } from 'pages/SPA/quiz/Quiz'
-import ChooseGift from 'pages/SPA/choose/ChooseGift'
+import { ShowGift } from 'pages/SPA/choose/ShowGift'
 import { GiftBox } from 'pages/SPA/choose/GiftBox'
-/* import { GiftConfirm } from '../pages/SPA/choose/Confirm'; */
-/* import { MessageForm } from '../pages/SPA/choose/Message'; */
+import { GiftList } from 'pages/SPA/choose/GiftList'
+import { GiftDetailContainer } from './GiftDetailContainer'
 import { RegisterGift } from 'pages/SPA/checkout/RegisterGift'
 import { Thank } from 'pages/SPA/checkout/Thank'
 import { ReThank } from 'pages/SPA/reciever/checkout/ReThank'
 import { RecomendLoading } from 'pages/SPA/quiz/RecomendLoading'
 import { useForm } from 'utilities/useForm'
 import { WAIT_TIME_FADE_IN, WAIT_TIME_FADE_OUT } from 'constants/index'
-import { useSurvey } from 'container/hooks/sender/useSurvey'
 import { useRecommendProducts } from 'container/hooks/sender/useRecommendProducts'
-import { Product } from 'constants/index'
+import { useChooseGift } from 'container/hooks/sender/useChooseGift'
+import { Product, SCENE_CONFIG_LIST } from 'constants/index'
 import { Head } from 'utilities/Head'
+
+const itemListPagePaths = SCENE_CONFIG_LIST.map((scene) => '/product/choose/' + scene.id)
+
+const itemOnboardingPagePaths = SCENE_CONFIG_LIST.map(
+  (scene) => '/product/onboarding/' + scene.id
+)
 
 /**
  * Main Container
  */
 const ProductContainer: React.FC = () => {
-  const match = useRouteMatch()
-  const history = useHistory()
-  const location = useLocation()
-  const { page, quizList, answeredQuizIds, loading } = useSurvey()
-  const currentQuiz = quizList[page - 1]
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
 
-  const { products, productsInCart, searchForm, scenesInCart } = useRecommendProducts(
-    answeredQuizIds
-  )
+  const {
+    products,
+    productsInCart,
+    searchForm,
+    scenesInCart,
+    giftScene,
+    addOnSelectedHandler,
+  } = useRecommendProducts()
 
   const [message, setMessage] = useState('')
   const [isNewsletter, setIsNewsletter] = useState<boolean>(true)
@@ -43,153 +50,215 @@ const ProductContainer: React.FC = () => {
   ])
   const [expire, setExpire] = useState('')
 
-  /* const giftsDetail = { */
-  /*   gifts: selectedItems.map((item) => getGiftDetail(products, item)), */
-  /*   prices: */
-  /*     //全商品同一価格なので一つ目の要素から取得 */
-  /*     selectedItems.length !== 0 */
-  /*       ? getPricesForChooseGiftConfirm( */
-  /*           products.find((item) => item.sys.id === selectedItems[0])?.price as number, */
-  /*           products.find((item) => item.sys.id === selectedItems[0])?.tax as number */
-  /*         ) */
-  /*       : [{ col1: '', col2: '' }], */
-  /* } */
-
   const selectedItems: Array<string> = productsInCart.map((product) => product.sys.id)
+
+  const { tappedItem, itemsWithHandlerAndStock } = useChooseGift(products)
 
   // リロード対策
   useEffect(() => {
-    // 決済完了ページではそのまま
-    if (location.pathname === '/product/success') {
+    // 一覧ページ、決済完了ページ、ギフトボックスページではそのまま
+    const DIRECT_ACCESSABLE_PATHES = [
+      '/product/choose',
+      ...itemListPagePaths,
+      '/product/onboarding',
+      ...itemOnboardingPagePaths,
+      '/product/success',
+      '/product/giftbox',
+    ]
+
+    if (
+      DIRECT_ACCESSABLE_PATHES.includes(pathname) ||
+      pathname.startsWith('/product/detail/')
+    ) {
       return
     }
-    if (!('1' in answeredQuizIds) && location.pathname !== `${match.path}/top`) {
-      if (location.pathname.includes(`${match.path}/quiz/`)) {
-        history.push(`${match.path}/quiz/1`)
-      } else if (window.location.hash.indexOf('access_token') < 0) {
-        history.push(`${match.path}/choose/`)
-      }
+
+    if (window.location.hash.indexOf('access_token') < 0) {
+      navigate(`/product/choose`)
     }
   }, [])
 
-  if ((loading || quizList === []) && page === 1) {
-    return <p style={{ paddingTop: '6rem', textAlign: 'center' }}>Loading...</p>
-  }
-
   return (
-    <Switch>
-      <Route exact path={`${match.path}/top`}>
-        <Head title="質問のご案内｜ZEFT ゼフト"></Head>
-        <Top />
-      </Route>
-      <Route path={`${match.path}/loading`}>
-        <Head title="ロード中｜ZEFT ゼフト"></Head>
-        <RecomendLoading />
-      </Route>
-      <Route path={`${match.path}/quiz/:number`}>
-        <Head title="質問｜ZEFT ゼフト"></Head>
-        {loading || currentQuiz === undefined ? undefined : (
-          <Quiz
-            quizType={currentQuiz.visualization}
-            content={currentQuiz.title}
-            linkToAnswers={currentQuiz.linkToAnswers} // NOTICE: 一時的に４選択肢までに制限
-            page={page}
-            tip={currentQuiz.tip}
-          />
-        )}
-      </Route>
-      <Route path={`${match.path}/choose`}>
-        <ChooseGift
-          items={products}
-          itemsInCart={productsInCart}
-          selectedItemId={
-            selectedItems.length >= 1 ? selectedItems[selectedItems.length - 1] : null
-          }
-          searchForm={searchForm}
-        />
-      </Route>
-      <Route path={`${match.path}/giftbox`}>
-        <GiftBox
-          items={productsInCart}
-          handleChooseClick={() => {
-            history.push(`${match.path}/choose`)
-          }}
-          handleConversionClick={() => {
-            history.push(`${match.path}/checkout`)
-          }}
-        />
-      </Route>
-      {/* <Route path={`${match.path}/waygift`}> */}
+    <Routes>
+      <Route
+        path={`top`}
+        element={
+          <React.Fragment>
+            <Head title="質問のご案内｜ZEFT ゼフト"></Head>
+            <Top />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`loading`}
+        element={
+          <React.Fragment>
+            <Head title="ロード中｜ZEFT ゼフト"></Head>
+            <RecomendLoading />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`detail/:itemId`}
+        element={
+          <React.Fragment>
+            <GiftDetailContainer
+              item={tappedItem}
+              howManyInCart={productsInCart.length}
+              addOnSelectedHandler={addOnSelectedHandler}
+            />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`choose`}
+        element={
+          <React.Fragment>
+            <GiftList
+              items={itemsWithHandlerAndStock}
+              handleNextButtonClick={() => navigate(`/product/giftbox`)}
+              howManyInCart={productsInCart.length}
+              form={searchForm}
+            />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`choose/:sceneid`}
+        element={
+          <React.Fragment>
+            <GiftList
+              items={itemsWithHandlerAndStock}
+              handleNextButtonClick={() => navigate(`/product/giftbox`)}
+              howManyInCart={productsInCart.length}
+              form={searchForm}
+            />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`onboarding/:sceneid`}
+        element={
+          <React.Fragment>
+            <ShowGift items={productsInCart} />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`onboarding`}
+        element={
+          <React.Fragment>
+            <ShowGift items={productsInCart} />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`giftbox`}
+        element={
+          <React.Fragment>
+            <Head></Head>
+            <GiftBox
+              items={productsInCart}
+              handleChooseClick={() => {
+                const scene = SCENE_CONFIG_LIST.find((scene) => scene.title === giftScene)
+                const sceneID = !!scene ? scene.id : 'subeteNoGift'
+                navigate(`/product/choose/${sceneID}`)
+              }}
+              handleConversionClick={() => {
+                navigate(`/product/checkout`)
+              }}
+            />
+          </React.Fragment>
+        }
+      />
+
+      {/* <Route path={`waygift`}> */}
       {/*   <WayGiftTemplate */}
       {/*     handleSNSClick={() => { */}
       {/*       sendByURL(); */}
-      {/*       history.push('/product/message'); */}
+      {/*       navigate('/product/message'); */}
       {/*     }} */}
       {/*     handleCardClick={() => { */}
       {/*       sendByCard(); */}
-      {/*       history.push('/product/message'); */}
+      {/*       navigate('/product/message'); */}
       {/*     }} */}
       {/*     handleDirectSendClick={() => { */}
       {/*       sendByDirect(); */}
-      {/*       history.push('/product/checkout'); */}
+      {/*       navigate('/product/checkout'); */}
       {/*     }} */}
       {/*   /> */}
       {/* </Route> */}
-      {/* <Route path={`${match.path}/message`}> */}
+      {/* <Route path={`message`}> */}
       {/*   <Head title="メッセージ入力｜ZEFT ゼフト"></Head> */}
       {/*   <MessageForm */}
       {/*     // {...giftDetail} */}
-      {/*     handleNextButtonClicked={() => history.push(`${match.path}/checkout`)} */}
+      {/*     handleNextButtonClicked={() => navigate(`${pathname}/checkout`)} */}
       {/*     message={message} */}
       {/*     setMessage={setMessage} */}
       {/*   /> */}
       {/* </Route> */}
-      {/* <Route path={`${match.path}/chooseconfirm`}> */}
+      {/* <Route path={`chooseconfirm`}> */}
       {/*   <Head title="ギフト確認｜ZEFT ゼフト"></Head> */}
       {/*   <GiftConfirm */}
       {/*     {...giftsDetail} */}
       {/*     handleNoLoginAndBuy={() => { */}
       {/*       sendByURL(); */}
-      {/*       history.push('/product/message'); */}
+      {/*       navigate('/product/message'); */}
       {/*     }} */}
       {/*   /> */}
       {/* </Route> */}
-      <Route path={`${match.path}/checkout`}>
-        <Head title="お客様情報入力｜ZEFT ゼフト"></Head>
-        <RegisterGift
-          sender={{
-            name: senderInfo.name === undefined ? '' : senderInfo.name,
-            onChangeName: (e) => sendSenderInfo('name', e.target.value),
-            email: senderInfo.email === undefined ? '' : senderInfo.email,
-            onChangeEmail: (e) => sendSenderInfo('email', e.target.value),
-            phone: senderInfo.phone === undefined ? '' : senderInfo.phone,
-            onChangePhone: (e) =>
-              // ブラウザの履歴機能で電話番号入れる際に、- が入ることがあるようなので削除
-              sendSenderInfo('phone', e.target.value),
-            recipientName: senderInfo?.recipientName,
-            onChangeRecipientName: (e) => sendSenderInfo('recipientName', e.target.value),
-            message: message,
-            setMessage: setMessage,
-            isNewsletter: isNewsletter,
-            toggleNewsLetter: () => {
-              setIsNewsletter((prev) => !prev)
-            },
-            selectedItems: selectedItems,
-          }}
-          price={getPriceForPayment(products, selectedItems[0] || null) || 0}
-          setExpire={setExpire}
-          scenesInCart={scenesInCart}
-          itemsInCart={productsInCart}
-        />
-      </Route>
-      <Route path={`${match.path}/success`}>
-        <Head title="購入完了｜ZEFT ゼフト"></Head>
-        <Thank expire={expire} />
-      </Route>
-      <Route exact path={`${match.path}/thank`}>
-        <ReThank />
-      </Route>
-    </Switch>
+      <Route
+        path={`checkout`}
+        element={
+          <React.Fragment>
+            <Head title="お客様情報入力｜ZEFT ゼフト"></Head>
+            <RegisterGift
+              sender={{
+                name: senderInfo.name === undefined ? '' : senderInfo.name,
+                onChangeName: (e) => sendSenderInfo('name', e.target.value),
+                email: senderInfo.email === undefined ? '' : senderInfo.email,
+                onChangeEmail: (e) => sendSenderInfo('email', e.target.value),
+                phone: senderInfo.phone === undefined ? '' : senderInfo.phone,
+                onChangePhone: (e) =>
+                  // ブラウザの履歴機能で電話番号入れる際に、- が入ることがあるようなので削除
+                  sendSenderInfo('phone', e.target.value),
+                recipientName: senderInfo?.recipientName,
+                onChangeRecipientName: (e) =>
+                  sendSenderInfo('recipientName', e.target.value),
+                message: message,
+                setMessage: setMessage,
+                isNewsletter: isNewsletter,
+                toggleNewsLetter: () => {
+                  setIsNewsletter((prev) => !prev)
+                },
+                selectedItems: selectedItems,
+              }}
+              price={getPriceForPayment(products, selectedItems[0] || null) || 0}
+              setExpire={setExpire}
+              scenesInCart={scenesInCart}
+              itemsInCart={productsInCart}
+            />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`success`}
+        element={
+          <React.Fragment>
+            <Head title="購入完了｜ZEFT ゼフト"></Head>
+            <Thank expire={expire} />
+          </React.Fragment>
+        }
+      />
+      <Route
+        path={`thank`}
+        element={
+          <React.Fragment>
+            <ReThank />
+          </React.Fragment>
+        }
+      />
+    </Routes>
   )
 }
 

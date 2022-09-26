@@ -8,8 +8,7 @@ import {
   useLazyQuery,
 } from '@apollo/client'
 
-import ChooseGift from '../pages/SPA/choose/ChooseGift'
-import { ProductWithHandlerAndStatus, Product } from 'constants/index'
+import { Product } from 'constants/index'
 
 const client = new ApolloClient({
   uri: process.env.REACT_APP_CONTENTFUL_URI,
@@ -49,8 +48,6 @@ const AllProductCard = () => {
     console.log(data)
   }, [page])
 
-  const products = typeof data !== 'undefined' ? data.productDetailCollection.items : []
-
   return (
     <>
       <div
@@ -80,11 +77,7 @@ const AllProductCard = () => {
           up
         </button>
       </div>
-      {loading ? (
-        <div>now loading</div>
-      ) : (
-        <ChooseGift items={products as ProductWithHandlerAndStatus[]} />
-      )}
+      {loading ? <div>now loading</div> : <h2>See /product/choose</h2>}
     </>
   )
 }

@@ -1,9 +1,6 @@
 import React, { forwardRef } from 'react'
-import { Button, Theme } from '@mui/material'
-import makeStyles from '@mui/styles/makeStyles'
-import createStyles from '@mui/styles/createStyles'
+import { Button } from '@mui/material'
 import { COLOR } from 'theme'
-import clsx from 'clsx'
 
 export type StyleProps = {
   buttonType: 'outlined' | 'primary' | 'white' | 'outlinedSecondary'
@@ -51,61 +48,6 @@ const variantMap = {
   outlinedSecondary: 'outlined',
 } as const
 
-const useStyles = makeStyles<Theme, StyleProps>(() =>
-  createStyles({
-    inactive: {
-      background: `${COLOR.inactiveButtonGray}!important`,
-    },
-    buttonStyle: {
-      '&:focus': {
-        outline: 'none',
-      },
-      color: ({ buttonType }) => textColorMap[buttonType],
-      '&:disabled': {
-        color: ({ buttonType }) => textColorMap[buttonType],
-        background: ({ buttonType }) => {
-          if (buttonType === 'primary') return COLOR.primaryLightenNavy
-        },
-      },
-      background: ({ buttonType }) =>
-        ['outlined', 'outlinedSecondary'].includes(buttonType)
-          ? undefined
-          : colorMap[buttonType],
-      border: ({ buttonType }) =>
-        ['outlined', 'outlinedSecondary'].includes(buttonType)
-          ? `1px solid  ${colorMap[buttonType]}`
-          : undefined,
-      padding: '0.5rem 1.5rem',
-      fontWeight: 700,
-      gridRow: '4 / 5',
-      gridColumn: '1 / 6',
-      justifySelf: 'center',
-      alignSelf: 'end',
-      height: '3rem',
-      '&:hover': {
-        background: ({ buttonType }) =>
-          ['outlined', 'outlinedSecondary'].includes(buttonType)
-            ? undefined
-            : colorMap[buttonType],
-        border: ({ buttonType }) =>
-          ['outlined', 'outlinedSecondary'].includes(buttonType)
-            ? `1px solid  ${colorMap[buttonType]}`
-            : undefined,
-      },
-      '&:active': {
-        background: ({ buttonType }) =>
-          ['outlined', 'outlinedSecondary'].includes(buttonType)
-            ? undefined
-            : colorMap[buttonType],
-        border: ({ buttonType }) =>
-          ['outlined', 'outlinedSecondary'].includes(buttonType)
-            ? `1px solid  ${colorMap[buttonType]}`
-            : undefined,
-      },
-    },
-  })
-)
-
 export const SquareButton = forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
   const {
     inactive,
@@ -118,19 +60,58 @@ export const SquareButton = forwardRef<HTMLButtonElement, ButtonProps>((props, r
     href,
     className,
   } = props
-  const classes = useStyles({ buttonType })
-
   return (
     <Button
       variant={variantMap[buttonType]}
       disableElevation={buttonType === 'primary'}
-      className={clsx(inactive && classes.inactive, classes.buttonStyle, className)} // add className passed by props
+      className={className} // add className passed by props
       ref={ref}
       disabled={isDisable ? true : false}
       onClick={onClick}
       fullWidth={fullWidth !== undefined ? fullWidth : isDefaultFullWidthMap[buttonType]}
       type={type}
       href={href}
+      sx={{
+        '&:focus': {
+          outline: 'none',
+        },
+        color: textColorMap[buttonType],
+        '&:disabled': {
+          color: textColorMap[buttonType],
+          background: buttonType === 'primary' ? COLOR.primaryLightenNavy : undefined,
+        },
+        background: inactive
+          ? `${COLOR.inactiveButtonGray} !important`
+          : ['outlined', 'outlinedSecondary'].includes(buttonType)
+          ? undefined
+          : colorMap[buttonType],
+        border: ['outlined', 'outlinedSecondary'].includes(buttonType)
+          ? `1px solid  ${colorMap[buttonType]}`
+          : undefined,
+        padding: '0.5rem 1.5rem',
+        fontWeight: 700,
+        gridRow: '4 / 5',
+        gridColumn: '1 / 6',
+        justifySelf: 'center',
+        alignSelf: 'end',
+        height: '3rem',
+        '&:hover': {
+          background: ['outlined', 'outlinedSecondary'].includes(buttonType)
+            ? undefined
+            : colorMap[buttonType],
+          border: ['outlined', 'outlinedSecondary'].includes(buttonType)
+            ? `1px solid  ${colorMap[buttonType]}`
+            : undefined,
+        },
+        '&:active': {
+          background: ['outlined', 'outlinedSecondary'].includes(buttonType)
+            ? undefined
+            : colorMap[buttonType],
+          border: ['outlined', 'outlinedSecondary'].includes(buttonType)
+            ? `1px solid  ${colorMap[buttonType]}`
+            : undefined,
+        },
+      }}
     >
       {children}
     </Button>

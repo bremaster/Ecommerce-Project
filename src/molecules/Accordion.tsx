@@ -38,16 +38,16 @@ export const AccordionSummary = styled((props: MuiAccordionSummaryProps) => (
 })
 
 export const AccordionDetails = styled(MuiAccordionDetails)({
-  borderTop: `1px solid ${COLOR.gray500}`,
-  padding: '16px 0',
+  padding: '0 0 16px 0',
 })
 
 const Arrow = () => (
   <ArrowForwardIosSharpIcon
+    strokeWidth="3px"
+    stroke="#4a4a4a"
     sx={{
       fontSize: '16px',
       transform: 'rotate(90deg)',
-      color: COLOR.primaryNavy,
     }}
   />
 )

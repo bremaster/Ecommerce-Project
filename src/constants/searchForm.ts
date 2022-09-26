@@ -4,16 +4,14 @@ export const GIFT_SCENE_LIST = [
   '出産内祝い',
   '結婚祝い',
   '結婚内祝い',
+  '誕生日',
+  'お礼',
 ]
 
 // convert array to union
 export type GiftScene = typeof GIFT_SCENE_LIST[number]
 
 export type FormAction =
-  | {
-      type: 'changeScene'
-      payload: GiftScene
-    }
   | {
       type: 'changeKeywords'
       payloads: string[]
@@ -44,10 +42,6 @@ export type FormAction =
     }
 
 export type FormState = {
-  scene: {
-    value: GiftScene
-    options: Array<GiftScene>
-  }
   minPrice: {
     value: number | null
     options: Array<number>
@@ -68,9 +62,6 @@ export type FormState = {
 }
 
 export type FormStateWithSetter = FormState & {
-  scene: {
-    setValue: (value: FormState['scene']['value']) => void
-  }
   keywords: {
     setValues: (values: FormState['keywords']['values']) => void
   }
@@ -86,10 +77,6 @@ export type FormStateWithSetter = FormState & {
 }
 
 export const INITIAL_FORM_STATE = {
-  scene: {
-    value: 'すべてのギフト',
-    options: GIFT_SCENE_LIST,
-  },
   keywords: {
     values: [],
     options: [],
@@ -109,5 +96,28 @@ export const INITIAL_FORM_STATE = {
   },
 }
 
-export const MAX_PRICE = 15000 as const
-export const MIN_PRICE = 1000 as const
+export const SearchConfig: {
+  [key: string]: { itemSortKey: string }
+} = {
+  すべてのギフト: {
+    itemSortKey: 'orderAllIwai',
+  },
+  出産祝い: {
+    itemSortKey: 'orderSyussanIwai',
+  },
+  出産内祝い: {
+    itemSortKey: 'orderSyussanUchiIwai',
+  },
+  結婚祝い: {
+    itemSortKey: 'orderKekkonIwai',
+  },
+  結婚内祝い: {
+    itemSortKey: 'orderKekkonUchiIwai',
+  },
+  誕生日: {
+    itemSortKey: 'orderTanjobi',
+  },
+  お礼: {
+    itemSortKey: 'orderOrei',
+  },
+}

@@ -1,84 +1,81 @@
 import React from 'react'
-import makeStyles from '@mui/styles/makeStyles'
-import { Card, CardActionArea, CardMedia, Typography, Stack } from '@mui/material'
-import { TagList } from 'molecules/TagList'
+import { Box, Card, CardActionArea, CardMedia, Typography, Stack } from '@mui/material'
 
 import { SelectStatus } from 'constants/index'
 
+import { styled } from '@mui/system'
+
 type DinamicStyleProps = {
-  selectableStatus?: SelectStatus
   outOfStock: boolean
 }
 
-const useStyles = makeStyles({
-  root: {
-    /* aspectRatio: '10 / 16', */
-    boxShadow: '0 0 0 0',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    '& button': {
-      paddingBottom: '20px',
-    },
-    '& .MuiTouchRipple-root': {
+const Root = styled(Card)({
+  boxShadow: '0 0 0 0',
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+  '& button': {
+    paddingBottom: 0,
+  },
+  '& .MuiTouchRipple-root': {
+    display: 'none',
+  },
+  '& div': {
+    '&:focusVisible': {
       display: 'none',
     },
-    '& div': {
-      '&:focusVisible': {
-        display: 'none',
-      },
-    },
+  },
+  '& .MuiCardActionArea-focusHighlight': {
+    backgroundColor: 'white',
+  },
+  '&:hover': {
     '& .MuiCardActionArea-focusHighlight': {
+      opacity: 0.5,
       backgroundColor: 'white',
     },
-    '&:hover': {
-      '& .MuiCardActionArea-focusHighlight': {
-        opacity: 0.5,
-        backgroundColor: 'white',
-      },
-    },
-  },
-  brand: {
-    color: '#CFCAC4',
-    fontFamily: 'Noto Sans JP',
-    fontSize: '14px',
-    lineHeight: '21px',
-    letterSpacing: '0.03em',
-  },
-  imageWrapperCard: {
-    borderRadius: '10px',
-    backgroundColor: '#EDF3FC', // for testing,
-  },
-  checkIcon: {
-    position: 'absolute',
-    bottom: '10px',
-    right: '10px',
-  },
-  iconWrapper: {
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-  },
-  pricetitle: {
-    fontFamily: 'Noto Sans JP',
-    fontSize: '10px',
-    lineHeight: '10px',
-    letterSpacing: '0.03em',
-    textAlign: 'left',
-    color: ({ outOfStock }: DinamicStyleProps) =>
-      outOfStock === true ? '#B0B0B0' : '#4A4A4A',
-  },
-  price: {
-    fontFamily: 'Outfit',
-    fontSize: '18px',
-    fontWeight: 600,
-    lineHeight: '12px',
-    letterSpacing: '0em',
-    textAlign: 'left',
-    color: ({ outOfStock }: DinamicStyleProps) =>
-      outOfStock === true ? '#B0B0B0' : '#4A4A4A',
   },
 })
+
+const Brand = styled(Typography)({
+  marginTop: 10,
+  color: '#4A4A4A',
+  fontFamily: 'Noto Sans JP',
+  fontWeight: 500,
+  fontSize: '14px',
+  lineHeight: 1.3,
+  letterSpacing: '0.03em',
+  display: '-webkit-box', // for long text
+  WebkitLineClamp: '2', // for long text
+  WebkitBoxOrient: 'vertical', // for long text
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+})
+
+const IconWrapper = styled(Box)({
+  width: '100%',
+  position: 'absolute',
+  top: 0,
+})
+
+const PriceTitle = styled(Typography, {
+  shouldForwardProp: (propName) => propName !== 'outOfStock',
+})(({ outOfStock }: DinamicStyleProps) => ({
+  fontFamily: 'Noto Sans JP',
+  fontSize: '10px',
+  lineHeight: 1,
+  letterSpacing: '0.03em',
+  textAlign: 'left',
+  color: outOfStock === true ? '#B0B0B0' : '#4A4A4A',
+}))
+
+const Price = styled(Typography, {
+  shouldForwardProp: (propName) => propName !== 'outOfStock',
+})(({ outOfStock }: DinamicStyleProps) => ({
+  fontFamily: 'Noto Sans JP',
+  fontSize: '14px',
+  lineHeight: 1,
+  color: outOfStock === true ? '#B0B0B0' : '#4A4A4A',
+}))
 
 interface Props {
   /** main photo of the item */
@@ -88,7 +85,7 @@ interface Props {
   /** click handler */
   handleClick: () => void
   /** brand name */
-  brand?: string
+  keyMessage?: string
   /** tag objects */
   tags?: { name: string }[]
   /** item selection status */
@@ -101,55 +98,53 @@ const defaultProps: Props = {
   img: '/static/images/cards/contemplative-reptile.jpg',
   priceText: '9999YEN',
   handleClick: () => alert('test'),
-  brand: '',
+  keyMessage: '新商品のご紹介',
   tags: [],
   selectableStatus: 'SELECTABLE',
   outOfStock: false,
 }
 
 export const ItemCard = (props: Props): JSX.Element => {
-  const { img, handleClick, brand, tags, selectableStatus, priceText, outOfStock } = props
-
-  const classes = useStyles({ selectableStatus, outOfStock })
+  const { img, handleClick, keyMessage, selectableStatus, priceText, outOfStock } = props
 
   return (
-    <Card className={classes.root} onClick={handleClick}>
+    <Root onClick={handleClick}>
       <CardActionArea>
         <CardMedia
-          className={classes.imageWrapperCard}
           component="img"
           alt="Contemplative Reptile"
           image={img}
           title="Contemplative Reptile"
+          sx={{
+            borderRadius: '10px',
+            backgroundColor: '#EDF3FC',
+          }}
         />
-        <div className={classes.iconWrapper}>
+        <IconWrapper>
           {selectableStatus === 'SELECTED' && <img width="100%" src="/bookmark.svg" />}
-        </div>
-        {tags && <TagList tags={tags.map((tag) => tag.name)} />}
-        <Typography className={classes.brand}>{brand}</Typography>
-        <Stack direction="row" alignItems="end" gap="4px" mt="4px">
-          <Typography className={classes.pricetitle}>税込</Typography>
-          <Typography className={classes.price}>{priceText}</Typography>
+        </IconWrapper>
+        <Brand>{keyMessage}</Brand>
+        <Stack direction="row" alignItems="end" gap={0.5} mt={1.5}>
+          <Price outOfStock={outOfStock}>{priceText}</Price>
+          <PriceTitle outOfStock={outOfStock}>（税込）</PriceTitle>
         </Stack>
-        {outOfStock && <SoldOutText />}
+        {outOfStock ? (
+          <Typography
+            sx={{
+              fontFamily: 'Outfit',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '14px',
+              lineHeight: '23px',
+              color: '#FE8B7B',
+            }}
+          >
+            SOLD OUT!
+          </Typography>
+        ) : null}
       </CardActionArea>
-    </Card>
+    </Root>
   )
 }
-
-const SoldOutText = () => (
-  <Typography
-    sx={{
-      fontFamily: "'Outfit'",
-      fontStyle: 'normal',
-      fontWeight: 600,
-      fontSize: '14px',
-      lineHeight: '23px',
-      color: '#FE8B7B',
-    }}
-  >
-    SOLD OUT!
-  </Typography>
-)
 
 ItemCard.defaultProps = defaultProps
