@@ -26,6 +26,7 @@ import {
   TermsOfService,
   ShippingRemark,
   Footer,
+  Loading,
 } from 'organisms'
 import { FormRow, PullDownFormRow } from 'molecules'
 import { Layout } from 'templates/Layout'
@@ -37,6 +38,7 @@ import { GiftScene, GIFT_SCENE_LIST } from 'constants/searchForm'
 import { Product } from 'constants/index'
 import { dataLayerPush } from 'utilities/GoogleAnalytics'
 import { checkHalfWidth } from 'utilities/checkHalfWidth'
+import { getSalesChannel } from 'utilities/SalesChannel'
 
 import { styled } from '@mui/system'
 
@@ -167,6 +169,7 @@ export const RegisterGift: React.FC<Props> = ({
   const emailtype =
     /^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/
 
+  const [show, setShow] = useState(false)
   const [errors, setErrors] = useState({
     name: '',
     phone: '',
@@ -214,10 +217,12 @@ export const RegisterGift: React.FC<Props> = ({
   useEffect(() => {
     const hasAccessToken = window.location.hash.indexOf('access_token') > -1
     // Prevent gift links from being created when a user comes via browser back
-    const isAuthenticated = linkCreatedStatus.get() === 'AUTH_REQUESTED'
-    if (hasAccessToken && isAuthenticated && !!tempPrevSender) {
+    const isAuthRequested = linkCreatedStatus.get() === 'AUTH_REQUESTED'
+    if (hasAccessToken && isAuthRequested && !!tempPrevSender) {
       const prevSender: SenderType = JSON.parse(tempPrevSender)
       onSubmit(prevSender)
+    } else {
+      setShow(true)
     }
   }, [])
 
@@ -229,6 +234,8 @@ export const RegisterGift: React.FC<Props> = ({
   const [showShippingMore, setShowShippingMore] = useState(false)
 
   const [resend, setResend] = useState(false)
+
+  const salesChannel = getSalesChannel()
 
   const onSubmit = async (payload: SenderType) => {
     setTransactionState('running')
@@ -244,6 +251,7 @@ export const RegisterGift: React.FC<Props> = ({
       name: payload.name,
       noshiType: payload.noshiType,
       noshiNaire: payload.noshiNaire,
+      salesChannel: !!salesChannel ? salesChannel : '',
     })
     const successCallback = (json: { Expires: string; Token: string }) => {
       setExpire(json.Expires)
@@ -651,7 +659,9 @@ export const RegisterGift: React.FC<Props> = ({
     window.scrollTo(0, 0)
   }, [])
 
-  return (
+  return show === false ? (
+    <Loading />
+  ) : (
     <>
       <Layout maxWidth="md">
         <PageTitle />

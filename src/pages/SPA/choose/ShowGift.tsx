@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography, useMediaQuery } from '@mui/material'
 
 import { GiftListCart, Footer } from 'organisms'
-import { ProductWithHandlerAndStatus } from 'constants/index'
+import { ProductWithHandlerAndStatus, SCENE_CONFIG_LIST } from 'constants/index'
 
 import { styled } from '@mui/system'
 
@@ -46,12 +46,22 @@ export const ShowGift = ({ items }: Props) => {
     window.scrollTo(0, 0)
   }, [])
 
+  const isMdSize = useMediaQuery('(min-width: 900px)')
+
   const navigate = useNavigate()
 
   const { sceneid } = useParams<{ sceneid: string }>()
 
   const handleChooseItem = () => {
-    navigate(`/product/choose/${sceneid ? sceneid : ''}`)
+    if (isMdSize) {
+      navigate(`/product/choose/${sceneid ? sceneid : ''}`)
+      return
+    }
+    if (!!sceneid && sceneid !== SCENE_CONFIG_LIST[0].id) {
+      navigate(`/product/presearch/price/${sceneid}`)
+      return
+    }
+    navigate(`/product/presearch/scene/${SCENE_CONFIG_LIST[0].id}`)
   }
 
   return (
@@ -65,7 +75,7 @@ export const ShowGift = ({ items }: Props) => {
           </Title>
         </Stack>
         <Arrow alignItems="center">
-          <img src="/arrow-down.png" />
+          <img src="/arrow-down.svg" />
         </Arrow>
         <GiftListCart
           items={items}

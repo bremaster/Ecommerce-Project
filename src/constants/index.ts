@@ -102,9 +102,16 @@ export type Product = {
     }[]
   }
   scenes: string[]
-  keywords: string[]
   noshi: boolean
   stockOk: undefined | boolean // if undefined, stock fetching is on going
+}
+
+export type BrandType = {
+  sys: {
+    id: string
+  }
+  brandName: string
+  sortKey: string
 }
 
 export type ProductWithHandlerAndStatus = Product & {
@@ -156,6 +163,14 @@ export type FormKey = typeof formKeys[number]
 export type WayGiftType = 'URLONLY' | 'REALCARD' | 'DIRECT'
 export type WayRecipientType = 'UNKNOWN' | 'SENDER' | 'OTHERS'
 export type SelectStatus = 'SELECTABLE' | 'UNSELECTABLE' | 'SELECTED'
+
+export type SceneType = {
+  id: string
+  title: GiftScene
+  iconBlackWhite: string
+  iconColored: string
+  metaTag: { title: string; description: string }
+}
 
 export const WAIT_TIME_FADE_IN = 600
 export const WAIT_TIME_FADE_OUT = 300

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { Box, Typography, Stack } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 
 import { GiftBoxItem, ShippingLink } from 'organisms'
 import { ProductWithHandlerAndStatus } from 'constants/index'
@@ -47,6 +48,8 @@ export const GiftListCart = ({ items, handleChooseClick, type }: Props) => {
   // item slots are 3 at most
   const emptySlot = new Array(3 - items.length).fill(undefined)
 
+  const navigate = useNavigate()
+
   return (
     <>
       <CardWrap width="100%">
@@ -60,11 +63,12 @@ export const GiftListCart = ({ items, handleChooseClick, type }: Props) => {
               img={item.productImageCloudinary[0].secure_url}
               brand={item.brand.brandName}
               title={item.title}
-              onClick={item.handleClick}
+              onClickCancelButton={item.handleClick}
+              onClickWrapperBox={() => navigate(`/product/detail/${item.sys.id}`)}
             />
           ))}
           {emptySlot.map((_, i) => (
-            <GiftBoxItem key={i} onClick={handleChooseClick} select={i === 0} />
+            <GiftBoxItem key={i} onClickWrapperBox={handleChooseClick} select={i === 0} />
           ))}
         </Stack>
 

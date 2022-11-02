@@ -14,6 +14,7 @@ import {
 // import { ProductCheck } from './utilities/ProductCheck';
 //import { Home as OldLpHome } from './pages/LP/Home';
 import { LpHome } from './pages/NewLP'
+// import { LpHikidemono } from './pages/LpHikidemono'
 // import { FAQ } from './pages/LP/FAQ';
 import './App.css' // global css
 import { Head, HeadContextProvider } from 'utilities/Head'
@@ -21,10 +22,17 @@ import { CollaboratorIdProvider } from 'container/CollaboratorContainer'
 import { GraphqlProvider } from 'container/hooks'
 import { MuiCustomThemeProvider } from 'theme'
 import { usePageViews } from 'utilities/GoogleAnalytics'
+import { useSalesChannel } from 'utilities/SalesChannel'
 
 // it could be your App.tsx file or theme file that is included in your tsconfig.json
 
 const environment = process.env.REACT_APP_ENV // development | staging | production
+
+const LpHikidemono = React.lazy(() =>
+  import('./pages/LpHikidemono').then(({ LpHikidemono }) => ({
+    default: LpHikidemono,
+  }))
+)
 
 const Product = React.lazy(() =>
   import('./pages/SPA/Prodcut').then(({ Product }) => ({
@@ -117,6 +125,7 @@ const App = (): JSX.Element => {
 
 const TopLevelRoutes = () => {
   usePageViews()
+  useSalesChannel()
 
   return (
     <>
@@ -145,10 +154,18 @@ const TopLevelRoutes = () => {
             </React.Fragment>
           }
         />
-        {/* <Route path="/oldlp"> */}
-        {/*   <Head title="ZEFT ゼフト｜ギフトサービス"></Head> */}
-        {/*   <OldLpHome></OldLpHome> */}
-        {/* </Route> */}
+        {/* LP Hikidemono  */}
+        <Route
+          path="lp/hikidemono"
+          element={
+            <React.Fragment>
+              <Head title="ZEFT ゼフト｜相手が選べるソーシャルギフトサービス"></Head>
+              <Suspense fallback={<Loading />}>
+                <LpHikidemono />
+              </Suspense>
+            </React.Fragment>
+          }
+        />
         {/* FAQ */}
         <Route
           path="faq"

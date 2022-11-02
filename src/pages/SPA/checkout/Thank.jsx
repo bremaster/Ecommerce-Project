@@ -253,6 +253,7 @@ export const Thank = ({ expire }) => {
   ]
 
   useEffect(() => {
+    window.scrollTo(0, 0)
     const { host } = window.location
     setHostname(host)
   }, [])

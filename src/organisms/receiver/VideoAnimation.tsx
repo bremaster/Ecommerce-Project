@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 
-import { Box, Stack, Typography, Modal, Fade } from '@mui/material'
+import { Box, Stack, Typography, Modal, Fade, useMediaQuery } from '@mui/material'
 import { keyframes } from '@mui/system'
 
 import { styled } from '@mui/system'
@@ -14,7 +14,7 @@ const fadeInAnimation = keyframes`
 	}
 `
 
-const BREAK_POINT_LARGE = 1300
+const BREAK_POINT_LARGE = 1000
 const BREAK_POINT_SMALL = 700
 
 export const Wrapper = styled(Box)({
@@ -53,26 +53,20 @@ export const BorderWrap = styled(Stack)({
   boxSizing: 'border-box',
 })
 
-export const LaptopVideoWrapper = styled(Stack)((props) => ({
+export const LaptopVideoWrapper = styled(Stack)({
   width: '100%',
-  [props.theme.breakpoints.down(BREAK_POINT_LARGE)]: {
-    display: 'none',
-  },
-}))
+})
 
-export const MobileVideoWrapper = styled(Stack)((props) => ({
+export const MobileVideoWrapper = styled(Stack)({
   width: '100%',
-  display: 'none',
-  [props.theme.breakpoints.down(BREAK_POINT_LARGE)]: {
-    display: 'flex',
-  },
+  display: 'flex',
   '& video': {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
   },
-}))
+})
 
 export const Text1 = styled(Typography)((props) => ({
   marginTop: '15px',
@@ -139,8 +133,12 @@ export const VideoAnimation: React.FC<Props> = ({
   senderSenderInfo,
   sendRecieverInfo,
 }) => {
-  const vidlaptopRef = useRef<HTMLVideoElement>(document.createElement('video'))
-  const vidmobileRef = useRef<HTMLVideoElement>(document.createElement('video'))
+  const vidlaptopRef = useRef<HTMLVideoElement>(null)
+  const vidmobileRef = useRef<HTMLVideoElement>(null)
+
+  const isLargeScreen = useMediaQuery(`(min-width:${BREAK_POINT_LARGE}px)`, {
+    defaultMatches: false,
+  })
 
   const [open, setOpen] = useState(true)
   const [videoClass, setVideoClass] = useState('')
@@ -148,8 +146,11 @@ export const VideoAnimation: React.FC<Props> = ({
   const startAnimation = () => {
     setVideoClass('video-animation')
 
-    vidlaptopRef.current.play()
-    vidmobileRef.current.play()
+    if (isLargeScreen) {
+      vidlaptopRef.current?.play()
+    } else {
+      vidmobileRef.current?.play()
+    }
 
     closeModal()
 
@@ -160,45 +161,48 @@ export const VideoAnimation: React.FC<Props> = ({
 
   return (
     <Wrapper onClick={startAnimation}>
-      <LaptopVideoWrapper alignItems="center">
-        <video
-          ref={vidlaptopRef}
-          width="100%"
-          playsInline
-          preload="metadata"
-          style={{ WebkitTransform: 'translate3d(0,0,0)' }}
+      {isLargeScreen ? (
+        <LaptopVideoWrapper alignItems="center">
+          <video
+            ref={vidlaptopRef}
+            width="100%"
+            playsInline
+            preload="metadata"
+            style={{ WebkitTransform: 'translate3d(0,0,0)' }}
+          >
+            <source
+              src="https://res.cloudinary.com/zeft/video/upload/v1650023601/zeft_reciever/opening_gift_laptop_cotmwv.mp4"
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
+        </LaptopVideoWrapper>
+      ) : (
+        <MobileVideoWrapper
+          alignItems="center"
+          sx={{
+            // For some reason, a vertical stretching animation was applied to the image, so we cancel it by this fade in.
+            animation: `${fadeInAnimation} 1s ease-in`,
+          }}
         >
-          <source
-            src="https://res.cloudinary.com/zeft/video/upload/v1650023601/zeft_reciever/opening_gift_laptop_cotmwv.mp4"
-            type="video/mp4"
-          />
-          Your browser does not support the video tag.
-        </video>
-      </LaptopVideoWrapper>
-      <MobileVideoWrapper
-        alignItems="center"
-        sx={{
-          // For some reason, a vertical stretching animation was applied to the image, so we cancel it by this fade in.
-          animation: `${fadeInAnimation} 1s ease-in`,
-        }}
-      >
-        <video
-          ref={vidmobileRef}
-          width="100%"
-          playsInline
-          preload="metadata"
-          // Use poster image unitl video is loaded
-          poster="/mobile-video.png"
-          style={{ WebkitPerspective: 1000 }}
-        >
-          <source
-            // Starts at 0.01s as annotated by # mark. Poster image is the same as this time point of this movie.
-            src="https://res.cloudinary.com/zeft/video/upload/v1650023606/zeft_reciever/opening_gift_mobile_rgzb85.mp4#t=0.01"
-            type="video/mp4"
-          />
-          Your browser does not support the video tag.
-        </video>
-      </MobileVideoWrapper>
+          <video
+            ref={vidmobileRef}
+            width="100%"
+            playsInline
+            preload="metadata"
+            // Use poster image unitl video is loaded
+            poster="/mobile-video.png"
+            style={{ WebkitPerspective: 1000 }}
+          >
+            <source
+              // Starts at 0.01s as annotated by # mark. Poster image is the same as this time point of this movie.
+              src="https://res.cloudinary.com/zeft/video/upload/v1650023606/zeft_reciever/opening_gift_mobile_rgzb85.mp4#t=0.01"
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
+        </MobileVideoWrapper>
+      )}
       <Modal
         hideBackdrop
         open={open}

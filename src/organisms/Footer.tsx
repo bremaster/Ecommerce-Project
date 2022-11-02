@@ -154,6 +154,14 @@ export const Footer = ({ isMinimal = false }: Props) => {
                   >
                     <StyledLink>ユーザーストーリー</StyledLink>
                   </Link>
+
+                  <Link
+                    href="/product/brand"
+                    color="inherit"
+                    sx={{ textDecoration: 'none !important' }}
+                  >
+                    <StyledLink>ブランド一覧</StyledLink>
+                  </Link>
                 </Stack>
               </Grid>
 

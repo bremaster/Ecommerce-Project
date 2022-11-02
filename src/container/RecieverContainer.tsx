@@ -68,12 +68,21 @@ function useProduct() {
 
   useEffect(() => {
     const params = new URLSearchParams(search)
+    const preToken = localStorage.getItem('giftToken')
     const token = params.get('token')
     const preview = params.get('preview')
+
     if (token !== null) {
+      localStorage.setItem('giftToken', token)
       setGiftToken(token)
       setIsPreview(preview === 'true')
       fetchCard(token)
+    }
+
+    if (preToken !== null) {
+      setGiftToken(preToken)
+      setIsPreview(preview === 'true')
+      fetchCard(preToken)
     }
   }, [])
 

@@ -1,9 +1,13 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { Box } from '@mui/material'
 import { MenuAppBar, Footer, CommonThanks } from 'organisms'
 
 export const ReThank = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   return (
     <>
       <MenuAppBar giftBoxButton={false} />

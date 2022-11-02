@@ -13,7 +13,7 @@ export type GiftScene = typeof GIFT_SCENE_LIST[number]
 
 export type FormAction =
   | {
-      type: 'changeKeywords'
+      type: 'changeCateogry'
       payloads: string[]
     }
   | {
@@ -29,7 +29,7 @@ export type FormAction =
       payload: number
     }
   | {
-      type: 'replaceKeywordsOptions'
+      type: 'replaceCategoryOptions'
       payloads: Array<string>
     }
   | {
@@ -39,6 +39,9 @@ export type FormAction =
   | {
       type: 'setMaxPage'
       payload: number
+    }
+  | {
+      type: 'init'
     }
 
 export type FormState = {
@@ -50,7 +53,7 @@ export type FormState = {
     value: number | null
     options: Array<number>
   }
-  keywords: {
+  category: {
     values: Array<string>
     options: Array<string>
   }
@@ -62,8 +65,8 @@ export type FormState = {
 }
 
 export type FormStateWithSetter = FormState & {
-  keywords: {
-    setValues: (values: FormState['keywords']['values']) => void
+  category: {
+    setValues: (values: FormState['category']['values']) => void
   }
   minPrice: {
     setValue: (value: FormState['minPrice']['value']) => void
@@ -74,10 +77,11 @@ export type FormStateWithSetter = FormState & {
   page: {
     setValue: (value: FormState['page']['current']) => void
   }
+  clear: () => void
 }
 
 export const INITIAL_FORM_STATE = {
-  keywords: {
+  category: {
     values: [],
     options: [],
   },

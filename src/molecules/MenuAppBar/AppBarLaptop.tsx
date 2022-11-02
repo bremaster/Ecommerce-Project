@@ -146,6 +146,13 @@ export const AppBarLaptop: React.FC<Props> = ({
                   ユーザーストーリー
                 </StyledMenuItem>
               </Link>
+              <Link
+                href="/product/brand"
+                color="inherit"
+                sx={{ textDecoration: 'none !important' }}
+              >
+                <StyledMenuItem onClick={handleCloseDrop1}>ブランド一覧</StyledMenuItem>
+              </Link>
             </Menu>
           </Box>
           <Box ml={5}>

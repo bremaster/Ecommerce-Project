@@ -127,7 +127,6 @@ const Scene1 = styled(Stack)((props) => ({
   height: '196px',
   [props.theme.breakpoints.down('md')]: {
     height: '120px',
-    marginBottom: '-40px',
   },
 }))
 

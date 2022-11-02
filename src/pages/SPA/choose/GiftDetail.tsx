@@ -43,11 +43,13 @@ export const GiftDetail = ({
     <>
       <Head title={metaTag.title} description={metaTag.description} />
 
-      <MenuAppBar
-        navigateToLp={isReciever ? false : true}
-        giftBoxButton={true && !isReciever}
-        isPreview={isPreview}
-      />
+      {!isReciever && (
+        <MenuAppBar
+          navigateToLp={isReciever ? false : true}
+          giftBoxButton={true && !isReciever}
+          isPreview={isPreview}
+        />
+      )}
       <Box mt={{ xs: '10px', md: '2rem' }} />
       <Layout maxWidth="lg">
         <Description
@@ -78,17 +80,20 @@ export const GiftDetail = ({
           noshiNg={item.noshi === false}
           howManyInCart={howManyInCart}
           variants={variants}
+          isPreview={isPreview}
         />
       </Layout>
-      <Box
-        // Add padding to avoid overrapped by button
-        pb={{ xs: '80px', md: '0px' }}
-        sx={{
-          background: '#F6F6F6',
-        }}
-      >
-        <Footer />
-      </Box>
+      {!isReciever && (
+        <Box
+          // Add padding to avoid overrapped by button
+          pb={{ xs: '80px', md: '0px' }}
+          sx={{
+            background: '#F6F6F6',
+          }}
+        >
+          <Footer />
+        </Box>
+      )}
     </>
   )
 }

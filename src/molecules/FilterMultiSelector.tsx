@@ -17,7 +17,6 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import { styled } from '@mui/system'
 
 type Props = {
-  label: string
   values: string[]
   options: string[]
   setValues: (value: string[]) => void
@@ -217,7 +216,7 @@ export function FilterMultiSelector(props: Props): JSX.Element {
           endIcon={laptopopen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
         >
           <Typography>
-            {props.values.length > 0 ? props.values.join(', ') : 'キーワード'}
+            {props.values.length > 0 ? props.values.join(', ') : 'カテゴリ'}
           </Typography>
         </Laptopbutton>
         <Laptopstyle
@@ -243,7 +242,7 @@ export function FilterMultiSelector(props: Props): JSX.Element {
               }}
             />
             <Title>
-              <Typography align="center">キーワード</Typography>
+              <Typography align="center">カテゴリ</Typography>
             </Title>
             <Mobilekeyword>
               {props.options.map((name, index) => (
@@ -302,7 +301,7 @@ export function FilterMultiSelector(props: Props): JSX.Element {
         endIcon={open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
       >
         <Typography>
-          {props.values.length > 0 ? props.values.join(', ') : 'キーワード'}
+          {props.values.length > 0 ? props.values.join(', ') : 'カテゴリ'}
         </Typography>
       </Mobilebutton>
 
@@ -322,7 +321,7 @@ export function FilterMultiSelector(props: Props): JSX.Element {
             right={25}
           />
           <Title>
-            <Typography align="center">キーワード</Typography>
+            <Typography align="center">カテゴリ</Typography>
           </Title>
           <Mobilekeyword>
             {props.options.map((name, index) => (

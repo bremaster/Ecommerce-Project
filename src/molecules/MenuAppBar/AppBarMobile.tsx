@@ -143,6 +143,9 @@ export const AppBarMobile: React.FC<Props> = ({
                     <Link href="/#story" color="inherit" underline="none">
                       <StyledLink onClick={toggleHeader}>ユーザーストーリー</StyledLink>
                     </Link>
+                    <Link href="/product/brand" color="inherit" underline="none">
+                      <StyledLink onClick={toggleHeader}>ブランド一覧</StyledLink>
+                    </Link>
                   </Stack>
                 </Box>
               </Grid>

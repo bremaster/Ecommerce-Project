@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 
 import { useForm } from 'react-hook-form'
 import { GradientButton } from 'atoms'
-import { MenuAppBar, Footer, Card } from 'organisms'
+import { Card } from 'organisms'
 import { Layout } from 'templates/Layout'
 import { Box, Typography, Divider, Stack } from '@mui/material'
 
@@ -111,7 +111,6 @@ export const AddressConfirm: React.FC<Props> = ({
 
   return (
     <>
-      <MenuAppBar giftBoxButton={false} navigateToLp={false} />
       <Layout maxWidth="md">
         <PageTitle />
 
@@ -167,7 +166,6 @@ export const AddressConfirm: React.FC<Props> = ({
           </Box>
         </form>
       </Layout>
-      <Footer />
     </>
   )
 }

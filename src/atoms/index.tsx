@@ -40,3 +40,7 @@ export { VariationCard } from './VariationCard'
 export { VariationText } from './VariationText'
 
 export { Image } from './Image'
+
+export { AirbnbSlider } from './AirbnbSlider'
+
+export { SearchSceneItem } from './SearchSceneItem'

@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
 
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Box, Typography, Dialog, Stack, useMediaQuery, Divider } from '@mui/material'
+
 import { Theme } from '@mui/material/styles'
 import ImageGallery from 'react-image-gallery'
 import 'react-image-gallery/styles/css/image-gallery.css'
@@ -15,8 +16,11 @@ import {
 import { DescriptionSection, ShippingRemark } from 'organisms'
 import { COLOR } from 'theme'
 import { DescriptionGradientTable } from 'molecules'
-import { SelectStatus } from 'constants/index'
+import { SelectStatus, BrandType } from 'constants/index'
+import { QUERY_GET_BRAND_LIST } from 'container/hooks'
 import AdditionalInfoItem from './AdditionalInfoItem'
+
+import { useLazyQuery } from '@apollo/client'
 
 import { styled } from '@mui/system'
 
@@ -80,11 +84,10 @@ const TypoH3 = styled(Typography)((props) => ({
 const BrandName = styled(Typography)((props) => ({
   fontFamily: 'Noto Sans JP',
   fontStyle: 'normal',
-  fontWeight: 400,
-  fontSize: 18,
-  lineHeight: '26px',
+  fontWeight: 700,
+  fontSize: 14,
+  lineHeight: 1,
   letterSpacing: '0.03em',
-  color: '#CFCAC4',
   [props.theme.breakpoints.down('md')]: {
     fontSize: 12,
     lineHeight: '150%',
@@ -208,7 +211,6 @@ const ImageGalleryWrap = styled(Box)((props) => ({
     [props.theme.breakpoints.up('md')]: {
       // To avoid slide image from shrinking when the amount of thumbnails are small
       minWidth: IMAGE_GALLERY_SLIDE_SIZE_ON_LAPTOP + 'px',
-      textAlign: 'left',
     },
   },
   '& .image-gallery-thumbnail': {
@@ -304,6 +306,7 @@ export type Props = {
       imageUrl: string | null
     }[]
   }[]
+  isPreview?: boolean
 }
 
 export const Description = ({
@@ -332,6 +335,7 @@ export const Description = ({
   noshiNg = true,
   howManyInCart,
   variants,
+  isPreview = false,
 }: Props): JSX.Element => {
   const [width, setWidth] = useState<number | null | undefined>(null)
   const wrapperEl = useRef<HTMLDivElement>(null)
@@ -348,6 +352,16 @@ export const Description = ({
     selectableStatus,
     !!howManyInCart ? howManyInCart : 0
   )
+
+  const [fetchBrandList, { data }] = useLazyQuery<{
+    brandDetailCollection: { items: Array<BrandType> }
+  }>(QUERY_GET_BRAND_LIST)
+
+  useEffect(() => {
+    fetchBrandList({
+      variables: { order: '' },
+    })
+  }, [])
 
   // fix iOS focus position
   useEffect(() => {
@@ -368,12 +382,45 @@ export const Description = ({
       ? 'もらった方が' + variants.map((v) => v.title).join('・') + 'を選択'
       : ''
 
+  const selectedBrand = data?.brandDetailCollection.items.find(
+    (temp) => temp.brandName === brand.name
+  )
+
   const summaryPart = (
     <>
       <Stack direction={{ md: 'column', xs: 'column-reverse' }}>
         <Box>
-          <BrandName>{brand.name}</BrandName>
           <TypoH1>{name}</TypoH1>
+
+          <Stack mt={2.5} gap={'10px'} direction="row">
+            <BrandName
+              sx={{
+                color: '#CFCAC4',
+              }}
+            >
+              by
+            </BrandName>
+            <BrandName
+              sx={{
+                borderBottom: '1px solid #4A4A4A',
+                '& a': {
+                  color: '#4A4A4A !important',
+                  textDecoration: 'none !important',
+                },
+              }}
+            >
+              {isPreview || isReciever ? (
+                brand.name
+              ) : (
+                <Link
+                  to={`/product/brand/${selectedBrand?.sys.id}`}
+                  style={{ letterSpacing: '0.03em' }}
+                >
+                  {brand.name}
+                </Link>
+              )}
+            </BrandName>
+          </Stack>
         </Box>
       </Stack>
 

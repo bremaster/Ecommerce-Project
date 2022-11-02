@@ -37,8 +37,11 @@ const Count = styled(Typography)((props) => ({
 export const GiftBox = ({ count }: { count?: number }) => {
   return (
     <GiftBoxWrap position="relative" direction="row" alignItems="center">
-      <Box>
+      <Box display={{ md: 'block', xs: 'none' }}>
         <img src="/assets/cart-black.png" />
+      </Box>
+      <Box display={{ md: 'none', xs: 'block' }}>
+        <img src="/assets/cart-gradient.svg" />
       </Box>
       <Stack
         position="absolute"

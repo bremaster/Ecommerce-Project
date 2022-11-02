@@ -7,20 +7,31 @@ import { AppBarLaptop, AppBarMobile } from 'molecules'
 
 import { useRecommendProducts } from 'container/hooks/sender/useRecommendProducts'
 
-const MenuWrap = styled(Box)((props) => ({
+const MenuWrap = styled(Box)({
   flexGrow: 1,
   width: '100%',
   position: 'relative',
-  height: '64px',
+  height: '100px',
   borderBottom: '1px solid rgb(233, 236, 237)',
   zIndex: 30,
-  [props.theme.breakpoints.up('md')]: {
-    height: '100px',
-  },
   '& header': {
     height: '100%',
   },
-}))
+})
+
+const MenuMobileWrap = styled(Box)({
+  flexGrow: 1,
+  width: '100%',
+  position: 'sticky',
+  top: 0,
+  height: '64px',
+  borderBottom: '1px solid rgb(233, 236, 237)',
+  zIndex: 30,
+  backgroundColor: 'white',
+  '& header': {
+    height: '100%',
+  },
+})
 
 interface Props {
   /** if true, git box (cart) button is displayed at left */
@@ -41,25 +52,28 @@ export const MenuAppBar: React.FC<Props> = ({
   const isLaptop = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'), {
     defaultMatches: false,
   })
-
   const { productsInCart } = useRecommendProducts()
 
   return (
-    <MenuWrap>
+    <>
       {isLaptop ? (
-        <AppBarLaptop
-          giftBoxButton={giftBoxButton && !isPreview}
-          howManyInCart={productsInCart.length}
-          navigateToLp={navigateToLp}
-          cta={cta}
-        />
+        <MenuWrap>
+          <AppBarLaptop
+            giftBoxButton={giftBoxButton && !isPreview}
+            howManyInCart={productsInCart.length}
+            navigateToLp={navigateToLp}
+            cta={cta}
+          />
+        </MenuWrap>
       ) : (
-        <AppBarMobile
-          giftBoxButton={giftBoxButton && !isPreview}
-          howManyInCart={productsInCart.length}
-          navigateToLp={navigateToLp}
-        />
+        <MenuMobileWrap>
+          <AppBarMobile
+            giftBoxButton={giftBoxButton && !isPreview}
+            howManyInCart={productsInCart.length}
+            navigateToLp={navigateToLp}
+          />
+        </MenuMobileWrap>
       )}
-    </MenuWrap>
+    </>
   )
 }

@@ -83,6 +83,7 @@ const PRODUCT_DETAIL_FRAGMENT = gql`
     noshi
     productIntroduction
     productImageCloudinary
+    category
     brand {
       ... on BrandDetail {
         brandName
@@ -148,7 +149,7 @@ const QUERY_GET_PRODUCTS_WITH_FILTER = gql`
   query getProductsWithFilter(
     $limit: Int
     $skip: Int
-    $keywords: [String]
+    $category: [String]
     $scene: String
     $minPrice: Int
     $maxPrice: Int
@@ -162,7 +163,7 @@ const QUERY_GET_PRODUCTS_WITH_FILTER = gql`
         productPrice_gte: $minPrice
         productPrice_lte: $maxPrice
         scenes_contains_some: [$scene]
-        keywords_contains_some: $keywords
+        category_contains_some: $category
       }
       order: $sortKeys
     ) {
@@ -174,13 +175,49 @@ const QUERY_GET_PRODUCTS_WITH_FILTER = gql`
   }
 `
 
-const QUERY_GET_PRICE_AND_KEYWORDS = gql`
-  query GetKeywordsAndPrice( $scene: String) {
+const QUERY_GET_PRICE_AND_CATEGORY = gql`
+  query GetCategoryAndPrice( $scene: String) {
     giftSceneCollection(preview: ${isPreview}, where: { scene: $scene }, limit: 1) {
       items {
-        keywords
+        categories: category
         minPrice
         maxPrice
+      }
+    }
+  }
+`
+
+const QUERY_GET_BRAND_LIST = gql`
+  query getBrands {
+    brandDetailCollection(order: sortKey_ASC, preview: ${isPreview}, where: {sortKey_exists: true}) {
+      items {
+        sys {
+          id
+        }
+        brandName
+        sortKey
+        linkedFrom {
+          productDetailCollection {
+            total
+          }
+        }
+      }
+    }
+  }
+`
+
+const QUERY_GET_BRAND_DETAIL = gql`
+  ${PRODUCT_DETAIL_FRAGMENT}
+  query getProductsByBrand($id: String!) {
+    brandDetail(id: $id, preview: ${isPreview}) {
+      brandName
+      brandImageCloudinary
+      linkedFrom {
+        productDetailCollection(limit: 20) {
+          items {
+            ...productDetailFragment
+          }
+        }
       }
     }
   }
@@ -192,5 +229,7 @@ export {
   QUERY_GET_PRODUCT_BY_ID,
   QUERY_GET_PRODUCTS_BY_IDS,
   QUERY_GET_PRODUCTS_WITH_FILTER,
-  QUERY_GET_PRICE_AND_KEYWORDS,
+  QUERY_GET_PRICE_AND_CATEGORY,
+  QUERY_GET_BRAND_LIST,
+  QUERY_GET_BRAND_DETAIL,
 }

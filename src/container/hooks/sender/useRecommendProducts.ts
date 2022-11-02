@@ -6,7 +6,7 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 
 import {
   QUERY_GET_PRODUCTS_WITH_FILTER,
-  QUERY_GET_PRICE_AND_KEYWORDS,
+  QUERY_GET_PRICE_AND_CATEGORY,
 } from 'container/hooks/index'
 import { MAX_SELECTABLE_ITEMS } from 'constants/index'
 import {
@@ -35,6 +35,7 @@ export function useRecommendProducts(): {
   searchForm: FormStateWithSetter
   giftScene: GiftScene
   addOnSelectedHandler: (item: Product) => ProductWithHandlerAndStatus
+  totalItems: number
 } {
   const navigate = useNavigate()
   const location = useLocation()
@@ -52,21 +53,31 @@ export function useRecommendProducts(): {
   const [fetchProductsByFilter, responseFetchProductsByFilter] = useLazyQuery<{
     productDetailCollection: { items: Array<Product>; total: number }
   }>(QUERY_GET_PRODUCTS_WITH_FILTER)
-  const [fetchPriceAndKeywords, responseFetchPriceAndKeywords] = useLazyQuery<{
+  const [fetchPriceAndCategory, responseFetchPriceAndCategory] = useLazyQuery<{
     giftSceneCollection: {
-      items: Array<{ keywords: string[]; minPrice: number; maxPrice: number }>
+      items: Array<{ categories: string[]; minPrice: number; maxPrice: number }>
     }
-  }>(QUERY_GET_PRICE_AND_KEYWORDS)
+  }>(QUERY_GET_PRICE_AND_CATEGORY)
+
+  const path = location.pathname
+
+  const getGiftScene = () => {
+    const sceneParam = path.split('/').pop()
+    const currentScene = SCENE_CONFIG_LIST.find((item) => item.id === sceneParam)
+    return !!currentScene ? currentScene.title : 'すべてのギフト'
+  }
 
   // get scene from url
-  const [giftScene, setGiftScene] = useState<GiftScene>('すべてのギフト')
+  const [giftScene, setGiftScene] = useState<GiftScene>(getGiftScene())
+
   useEffect(() => {
-    const path = location.pathname
-    if (path.startsWith('/product/choose')) {
-      const sceneParam = path.split('/').pop()
-      const giftSceneTemp = SCENE_CONFIG_LIST.find((item) => item.id === sceneParam)
-      const giftScene = !!giftSceneTemp ? giftSceneTemp.title : 'すべてのギフト'
-      setGiftScene(giftScene)
+    if (
+      path.startsWith('/product/choose') ||
+      path.startsWith('/product/presearch/price')
+    ) {
+      const newGiftScene = getGiftScene()
+
+      if (newGiftScene !== giftScene) setGiftScene(newGiftScene)
     }
   }, [location.pathname])
 
@@ -76,7 +87,7 @@ export function useRecommendProducts(): {
       variables: {
         limit: itemsPerPage,
         skip: itemsPerPage * (form.page.current - 1),
-        keywords: form.keywords.values.length >= 1 ? form.keywords.values : ['default'],
+        category: form.category.values.length >= 1 ? form.category.values : ['default'],
         scene: giftScene,
         minPrice: form.minPrice.value,
         maxPrice: form.maxPrice.value,
@@ -87,21 +98,25 @@ export function useRecommendProducts(): {
     giftScene,
     form.minPrice.value,
     form.maxPrice.value,
-    form.keywords.values.toString(),
+    form.category.values.toString(),
     form.page.current,
     itemsPerPage,
   ])
 
   useEffect(() => {
-    fetchPriceAndKeywords({
+    fetchPriceAndCategory({
       variables: { scene: giftScene },
     })
     dispatchAction({ type: 'changePage', payload: 1 })
   }, [giftScene])
 
   // watch api result and synchronize the result with form
-  const allItems = responseFetchPriceAndKeywords?.data?.giftSceneCollection.items
-  const [keywordOptions, priceOptions] = getKeywordAndPriceOptions(allItems)
+  const allItems = responseFetchPriceAndCategory?.data?.giftSceneCollection.items
+  const [categoryOptions, priceOptions] = getCategoryAndPriceOptions(allItems)
+
+  const totalItems = !!responseFetchProductsByFilter?.data?.productDetailCollection.total
+    ? responseFetchProductsByFilter?.data?.productDetailCollection.total
+    : 0
   const maxPage = !!responseFetchProductsByFilter?.data?.productDetailCollection.total
     ? Math.ceil(
         responseFetchProductsByFilter.data.productDetailCollection.total / itemsPerPage
@@ -109,10 +124,10 @@ export function useRecommendProducts(): {
     : 1
 
   useEffect(() => {
-    if (keywordOptions.toString() !== form.keywords.options.toString()) {
-      dispatchAction({ type: 'replaceKeywordsOptions', payloads: keywordOptions })
+    if (categoryOptions.toString() !== form.category.options.toString()) {
+      dispatchAction({ type: 'replaceCategoryOptions', payloads: categoryOptions })
     }
-  }, [keywordOptions.toString(), form.keywords.options.toString()])
+  }, [categoryOptions.toString(), form.category.options.toString()])
 
   useEffect(() => {
     if (priceOptions.toString() !== form.defaultPriceOptions.toString()) {
@@ -130,6 +145,7 @@ export function useRecommendProducts(): {
     sessionStorage.getItem('selectedItems') !== null
       ? (JSON.parse(sessionStorage.getItem('selectedItems') as string) as Array<Product>)
       : []
+
   const prevSelectedScenes =
     sessionStorage.getItem('selectedScenes') !== null
       ? (JSON.parse(sessionStorage.getItem('selectedScenes') as string) as Array<{
@@ -218,10 +234,10 @@ export function useRecommendProducts(): {
     products: productsSorted,
     productsInCart,
     searchForm: {
-      keywords: {
-        ...form.keywords,
+      category: {
+        ...form.category,
         setValues: (values) =>
-          dispatchAction({ type: 'changeKeywords', payloads: values }),
+          dispatchAction({ type: 'changeCateogry', payloads: values }),
       },
       minPrice: {
         ...form.minPrice,
@@ -236,21 +252,23 @@ export function useRecommendProducts(): {
         setValue: (value) => dispatchAction({ type: 'changePage', payload: value }),
       },
       defaultPriceOptions: form.defaultPriceOptions,
+      clear: () => dispatchAction({ type: 'init' }),
     },
     scenesInCart: selectedScenes.map((obj) => obj.scene),
     giftScene: giftScene,
     addOnSelectedHandler: addClickHandler,
+    totalItems: totalItems,
   }
 }
 
 function formReducer(state: FormState, action: FormAction): FormState {
   const init = INITIAL_FORM_STATE
   switch (action.type) {
-    case 'changeKeywords': {
-      const newKeywords = { values: action.payloads, options: state.keywords.options }
+    case 'changeCateogry': {
+      const newCategory = { values: action.payloads, options: state.category.options }
       // go to the first page
       const newPage = { ...state.page, current: 1 }
-      return { ...state, keywords: newKeywords, page: newPage }
+      return { ...state, category: newCategory, page: newPage }
     }
     case 'changeMinPrice': {
       // also change max price options
@@ -291,13 +309,21 @@ function formReducer(state: FormState, action: FormAction): FormState {
         },
       }
     }
-    case 'replaceKeywordsOptions': {
-      const newKeywords = {
-        // exclude `default` keyword from options
-        values: init.keywords.values,
-        options: action.payloads.filter((option) => option !== 'default'),
+    case 'replaceCategoryOptions': {
+      if (action.payloads.length > 0) {
+        const tempCategoryValues = state.category.values
+        const validOptions = tempCategoryValues.filter((value) =>
+          action.payloads.includes(value)
+        )
+        const newCategory = {
+          // exclude `default` category from options
+          values: validOptions,
+          options: action.payloads.filter((option) => option !== 'default'),
+        }
+
+        return { ...state, category: newCategory }
       }
-      return { ...state, keywords: newKeywords }
+      return state
     }
     case 'replacePriceOptions': {
       const defaultPriceOptions = action.payloads
@@ -325,20 +351,23 @@ function formReducer(state: FormState, action: FormAction): FormState {
         },
       }
     }
+    case 'init': {
+      return init
+    }
     default: {
       throw new Error()
     }
   }
 }
 
-function getKeywordAndPriceOptions(
-  items: Array<{ keywords: string[]; minPrice: number; maxPrice: number }> | undefined
+function getCategoryAndPriceOptions(
+  items: Array<{ categories: string[]; minPrice: number; maxPrice: number }> | undefined
 ): [string[], number[]] {
   if (items === undefined || items.length === 0) {
     return [[], []]
   }
 
-  const keywordListUnique = items[0].keywords
+  const categoryListUnique = items[0].categories
 
   const minPrice = items[0].minPrice
   const maxPrice = items[0].maxPrice
@@ -346,5 +375,5 @@ function getKeywordAndPriceOptions(
   const maxPriceCeiled = orgCeil(maxPrice, 1000)
   const priceOptions = range(minPriceFloored, maxPriceCeiled + 1, 1000)
 
-  return [keywordListUnique, priceOptions]
+  return [categoryListUnique, priceOptions]
 }

@@ -10,6 +10,8 @@ const CatalogueItemWrap = styled(Stack)((props) => ({
   height: 150,
   padding: '15px',
   gap: 26,
+  width: '100%',
+  cursor: 'pointer',
   [props.theme.breakpoints.down('sm')]: {
     padding: '10px',
     height: '100px',
@@ -79,12 +81,19 @@ type Props = {
   img?: string
   title?: string
   brand?: string
-  onClick?: () => void
+  onClickCancelButton?: () => void
+  onClickWrapperBox?: () => void
 }
 
-export const SelectedGiftItem: React.FC<Props> = ({ img, title, brand, onClick }) => {
+export const SelectedGiftItem: React.FC<Props> = ({
+  img,
+  title,
+  brand,
+  onClickCancelButton = () => undefined,
+  onClickWrapperBox = () => undefined,
+}) => {
   return (
-    <Box position="relative">
+    <Box position="relative" onClick={onClickWrapperBox}>
       <CatalogueItemWrap direction="row">
         <img
           style={{
@@ -101,7 +110,14 @@ export const SelectedGiftItem: React.FC<Props> = ({ img, title, brand, onClick }
           <TitleText>{title}</TitleText>
         </Stack>
       </CatalogueItemWrap>
-      <CancelButton onClick={onClick}>削除</CancelButton>
+      <CancelButton
+        onClick={(e) => {
+          e.stopPropagation()
+          onClickCancelButton()
+        }}
+      >
+        削除
+      </CancelButton>
     </Box>
   )
 }

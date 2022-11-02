@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { Checkbox, GradientButton } from 'atoms'
 import { FormRow, PullDownFormRow } from 'molecules'
-import { TermsOfService, MenuAppBar, Footer, Card } from 'organisms'
+import { TermsOfService, Card } from 'organisms'
 import { Layout } from 'templates/Layout'
 import {
   InputProps,
@@ -431,7 +431,6 @@ export const AddressForm: React.FC<Props> = ({
 
   return (
     <>
-      <MenuAppBar giftBoxButton={false} navigateToLp={false} isPreview={isPreview} />
       <Layout maxWidth="md">
         <PageTitle />
         {/* gift info */}
@@ -562,7 +561,6 @@ export const AddressForm: React.FC<Props> = ({
           </Box>
         </FormRoot>
       </Layout>
-      <Footer />
     </>
   )
 }

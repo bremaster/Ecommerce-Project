@@ -44,14 +44,22 @@ export { PreviewVideoAnimation } from './preview/PreviewVideoAnimation'
 export { PreviewShowProduct } from './preview/PreviewShowProduct'
 
 export { ShareLink } from './ShareLink'
+export { ShippingRemark } from './ShippingRemark'
+
 export { ShippingLink } from './choose/ShippingLink'
 export { GiftBoxItem } from './choose/GiftBoxItem'
-
-export { UseLaptop } from './NewLP/UseLaptop'
-export { UseMobile } from './NewLP/UseMobile'
-export { EventItem } from './NewLP/EventItem'
-export { StoryItem } from './NewLP/StoryItem'
-
-export { ShippingRemark } from './ShippingRemark'
 export { GiftBoxTitleBar } from './choose/GiftBoxTitleBar'
 export { GiftListCart } from './choose/GiftListCart'
+
+export { Carousel } from './NewLP/Carousel'
+export { Event } from './NewLP/Event'
+export { HeroCover } from './NewLP/HeroCover'
+export { Service } from './NewLP/Service'
+export { Story } from './NewLP/Story'
+export { Use } from './NewLP/Use'
+
+export { Use as HikidemonoUse } from './LpHikidemono/Use'
+export { Service as HikidemonoService } from './LpHikidemono/Service'
+export { Story as HikidemonoStory } from './LpHikidemono/Story'
+export { Question } from './LpHikidemono/Question'
+export { Carousel as HikidemonoCarousel } from './LpHikidemono/Carousel'

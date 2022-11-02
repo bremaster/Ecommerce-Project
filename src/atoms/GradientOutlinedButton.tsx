@@ -18,7 +18,6 @@ const StyledButton = styled(Button)({
   },
   '& h6': {
     fontFamily: 'Outfit',
-    fontSize: '14px',
     fontWeight: 700,
     background:
       'linear-gradient(102.32deg, #FEAA69 -13.04%, #FF8B7B 51.48%, #927DED 153.9%)',
@@ -51,7 +50,9 @@ export const GradientOutlinedButton = ({
       sx={{
         width: width,
         height: height,
-        fontSize: fontSize,
+        '& h6': {
+          fontSize: fontSize,
+        },
       }}
       type={type}
       href={href}

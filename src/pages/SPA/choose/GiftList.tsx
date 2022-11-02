@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react'
 
-import {
-  Box,
-  Stack,
-  Grid,
-  Typography,
-  Button,
-  Modal,
-  FormControl,
-  Select,
-  MenuItem,
-} from '@mui/material'
+import { Box, Stack, Grid, Typography, Button, Modal, useMediaQuery } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
+
 import SearchIcon from '@mui/icons-material/Search'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 
 import { GradientButton } from 'atoms'
 import { ItemCard, MenuAppBar, Footer } from 'organisms'
@@ -22,11 +14,18 @@ import {
   PriceFilter,
   PageIndicator,
   PriceLaptopFilter,
+  MobileSearchHeader,
+  MobileSearchItemLayout,
+  MobileSceneItem,
+  MobileKeywordItem,
+  MobilePriceItem,
+  ModalFooter,
 } from 'molecules'
 import Header from 'molecules/choose/Header'
 import { ProductWithHandlerAndStatus, SCENE_CONFIG_LIST } from 'constants/index'
 import { FormStateWithSetter } from 'constants/searchForm'
 import { Head } from 'utilities/Head'
+import { useScrollDirection } from 'utilities/useScrollDirection'
 
 import { styled } from '@mui/system'
 
@@ -37,6 +36,7 @@ type GiftListProps = {
   handleNextButtonClick: () => void
   howManyInCart?: number
   form?: FormStateWithSetter
+  totalItems?: number
 }
 
 const SidebarTitle = styled(Stack)({
@@ -84,57 +84,93 @@ const Selected = styled(Button)({
     'linear-gradient(102.49deg, #FFF3E9 -18.78%, #FFECDD -12.51%, #FFEAE7 56.55%, #EBE6FF 166.15%)',
 })
 
-const MobileScene = styled(Stack)({
-  '& button': {
-    width: '100%',
-    borderRadius: '10px',
-    filter: 'drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.15))',
-  },
-  '& .MuiFormControl-root': {
-    boxShadow: '0px 0px 10px rgb(0 0 0 / 15%)',
-    borderRadius: '10px',
-    color: '#FE8B7B',
-  },
-  '& label': {
-    color: '#B0B0B0',
-  },
-  '& .MuiSelect-select': {
-    color: '#4A4A4A',
-    fontWeight: 700,
-    fontFamily: 'Noto Sans JP',
-    fontSize: 14,
-    paddingLeft: 48,
-    lineHeight: 2,
-  },
-  '& svg': {
-    left: 13,
-    color: 'black',
-    transform: 'rotate(0)',
-  },
-  '& fieldset': {
-    border: 0,
-  },
+const MobileFilter = styled(Box)((props: { scrollflag: boolean }) => ({
+  padding: '16px 18.75px',
+  position: 'sticky',
+  backgroundColor: 'white',
+  top: props.scrollflag ? 63 : 0,
+  zIndex: 30,
+}))
+
+const MobileFilterButton = styled(Button)({
+  height: 54,
+  borderRadius: 27,
+  boxShadow: '0px 0px 10px rgb(0 0 0 / 15%)',
+  border: '1px solid #EEEEEE',
+  width: '100%',
+  gap: 10,
+  justifyContent: 'space-between',
+  padding: '0 20px',
+})
+
+const MobileSceneName = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  fontSize: 14,
+  fontWeight: 700,
+  lineHeight: 1,
+  letterSpacing: '0.03em',
+  priceTextAlign: 'left',
+  color: '#4A4A4A',
+})
+
+const MobileFilterData = styled(Typography)({
+  fontFamily: 'Noto Sans JP',
+  fontSize: 12,
+  fontWeight: 400,
+  lineHeight: 1,
+  letterSpacing: '0.03em',
+  textAlign: 'left',
+  color: '#70757A',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  width: '100%',
+})
+
+const MobileSearchModal = styled(Stack)({
+  width: '100%',
+  height: '100%',
+  backgroundColor: '#F7F7F7',
+  justifyContent: 'space-between',
 })
 
 const GiftListWrap = styled(Stack)((props) => ({
   maxWidth: '1100px',
   width: '90%',
   margin: '60px auto',
-  [props.theme.breakpoints.down(1000)]: {
-    marginTop: '40px',
+  [props.theme.breakpoints.down('md')]: {
+    marginTop: 0,
   },
 }))
 
-const GiftListTitle = styled(Typography)({
+const GiftListTitle = styled(Typography)((props) => ({
   marginTop: '40px',
   fontFamily: 'Outfit',
   fontSize: '24px',
   fontWeight: '600',
   lineHeight: '30px',
   letterSpacing: '0.05em',
-  textAlign: 'left',
+  priceTextAlign: 'left',
   color: '#4A4A4A',
-})
+  [props.theme.breakpoints.down('md')]: {
+    display: 'none',
+  },
+}))
+
+const GiftListTitleMobile = styled(Typography)((props) => ({
+  marginTop: '24px',
+  fontFamily: 'Noto Sans JP',
+  fontSize: 16,
+  fontWeight: 700,
+  lineHeight: 1,
+  letterSpacing: 0.03,
+  priceTextAlign: 'left',
+  color: '#9D9D9D',
+  display: 'none',
+  [props.theme.breakpoints.down('md')]: {
+    display: 'block',
+  },
+}))
 
 const SubmitLaptopButton = styled(Button)((props) => ({
   position: 'fixed',
@@ -151,7 +187,7 @@ const SubmitLaptopButton = styled(Button)((props) => ({
   fontWeight: 700,
   lineHeight: '30px',
   letterSpacing: '0.03em',
-  textAlign: 'center',
+  priceTextAlign: 'center',
   '& img': {
     width: '45px',
   },
@@ -177,6 +213,7 @@ const SubmitMobileButton = styled(Box)((props) => ({
   [props.theme.breakpoints.down(1500)]: {
     display: 'block',
   },
+  zIndex: 10,
 }))
 
 const PriceModal = styled(Stack)({
@@ -225,7 +262,7 @@ const PriceStyle = styled(Box)((props) => ({
   padding: '24px',
   boxShadow:
     '0px 5px 5px -3px rgb(0 0 0 / 20%), 0px 8px 10px 1px rgb(0 0 0 / 14%), 0px 3px 14px 2px rgb(0 0 0 / 12%);',
-  [props.theme.breakpoints.down(1000)]: {
+  [props.theme.breakpoints.down('md')]: {
     top: '50%',
     left: '50%',
     maxWidth: '500px',
@@ -242,7 +279,7 @@ const PriceLaptopStyle = styled(Box)((props) => ({
   marginTop: '20px',
   boxShadow:
     '0px 5px 5px -3px rgb(0 0 0 / 20%), 0px 8px 10px 1px rgb(0 0 0 / 14%), 0px 3px 14px 2px rgb(0 0 0 / 12%);',
-  [props.theme.breakpoints.down(1000)]: {
+  [props.theme.breakpoints.down('md')]: {
     top: '50%',
     left: '50%',
     maxWidth: '500px',
@@ -260,37 +297,19 @@ const PriceTitle = styled(Stack)({
   },
 })
 
-const style = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  width: '80%',
-  transform: 'translate(-50%, -50%)',
-  bgcolor: 'background.paper',
-  borderRadius: '10px',
-  boxShadow: 24,
-  p: 4,
-}
-
-const MenuProps = {
-  PaperProps: {
-    style: {
-      display: 'none',
-    },
-  },
-}
-
 export const GiftList = ({
   items,
   handleNextButtonClick,
   howManyInCart = 0,
   form,
+  totalItems,
 }: GiftListProps) => {
   const { sceneid } = useParams<{ sceneid: string }>()
   const config = SCENE_CONFIG_LIST.find((item) => item.id === sceneid)
   const giftScene = !!config ? config.title : 'すべてのギフト'
   const metaTag = !!config ? config.metaTag : SCENE_CONFIG_LIST[0].metaTag
   const navigate = useNavigate()
+  const [mobileStep, setMobileStep] = useState(1)
   const [sceneopen, setSceneOpen] = useState(false)
   const [priceopen, setPriceOpen] = useState(false)
   const [pricelaptopopen, setPriceLaptopOpen] = useState(false)
@@ -303,11 +322,68 @@ export const GiftList = ({
 
   const handlePriceLaptopClose = () => setPriceLaptopOpen(false)
 
+  const [tempPrice, setTempPrice] = useState([form?.minPrice.value, form?.maxPrice.value])
+
+  const isMdSize = useMediaQuery('(min-width: 900px)')
+
   const checkSidebar = (item: string) => {
     if (!!form) {
       return item === giftScene
     }
   }
+
+  const initSearch = () => {
+    if (form) {
+      setTempPrice([form.minPrice.value, form.maxPrice.value])
+    }
+  }
+
+  const clearTempSearch = () => {
+    navigate(`/product/choose/${SCENE_CONFIG_LIST[0].id}`)
+    setTempPrice([0, 0])
+    form?.clear()
+  }
+
+  const search = () => {
+    if (form) {
+      form.minPrice.setValue(tempPrice[0] ? tempPrice[0] : 0)
+      form.maxPrice.setValue(tempPrice[1] ? tempPrice[1] : 40000)
+    }
+  }
+
+  const getPriceText = (
+    min: number | undefined | null,
+    max: number | undefined | null
+  ) => {
+    let priceText = ''
+
+    if (!min && !max) {
+      priceText = '価格を設定'
+    } else {
+      if (min) {
+        priceText += YEN_MARK + Number(min).toLocaleString()
+      } else {
+        priceText += '下限なし'
+      }
+
+      if (min || max) priceText += ' - '
+
+      if (max && max < (defaultMax ? defaultMax : 40000)) {
+        priceText += YEN_MARK + Number(max).toLocaleString()
+      } else {
+        priceText += '上限なし'
+      }
+    }
+
+    if (priceText === '下限なし - 上限なし') priceText = '価格を設定'
+
+    return priceText
+  }
+
+  const defaultMax = form?.defaultPriceOptions.slice(-1).pop()
+
+  const tempPriceText = getPriceText(tempPrice[0], tempPrice[1])
+  const priceText = getPriceText(form?.minPrice.value, form?.maxPrice.value)
 
   useEffect(() => {
     if (items.length !== 0) {
@@ -315,13 +391,59 @@ export const GiftList = ({
     }
   }, [items.map((item) => item.sys.id).toString()])
 
+  useEffect(() => {
+    if (tempPrice[1] && defaultMax)
+      if (tempPrice[1] > defaultMax) {
+        setTempPrice([tempPrice[0], defaultMax])
+      }
+  }, [tempPrice[1], defaultMax])
+
+  const scrollflag = useScrollDirection()
+
   return (
     <Box>
       <Head title={metaTag.title} description={metaTag.description} />
 
       <MenuAppBar giftBoxButton={true} />
 
-      {!!form && <Header scene={giftScene} />}
+      {!!form && isMdSize && <Header scene={giftScene} />}
+
+      {!!form && (
+        <MobileFilter display={{ md: 'none' }} scrollflag={scrollflag}>
+          <MobileFilterButton
+            onClick={() => {
+              handleSceneOpen()
+              setMobileStep(1)
+              initSearch()
+            }}
+          >
+            <SearchIcon sx={{ color: '#000 !important' }} />
+            <Stack sx={{ width: 'calc(100% - 70px)' }} gap={'4px'} alignItems="start">
+              {giftScene === 'すべてのギフト' &&
+              priceText === '価格を設定' &&
+              form.category.values.length == 0 ? (
+                <>
+                  <MobileSceneName>シーンは？</MobileSceneName>
+                  <MobileFilterData>選択なし・価格ALL・カテゴリーALL</MobileFilterData>
+                </>
+              ) : (
+                <>
+                  <MobileSceneName>
+                    {giftScene === 'すべてのギフト' ? '選択なし' : giftScene}
+                  </MobileSceneName>
+                  <MobileFilterData>
+                    {priceText !== '価格を設定' ? priceText : '価格ALL'}・
+                    {form.category.values.length > 0
+                      ? form.category.values.join(', ')
+                      : 'カテゴリーALL'}
+                  </MobileFilterData>
+                </>
+              )}
+            </Stack>
+            <KeyboardArrowDownIcon sx={{ color: '#4A4A4A !important', fontSize: 16 }} />
+          </MobileFilterButton>
+        </MobileFilter>
+      )}
 
       {!!form && (
         <GiftListWrap>
@@ -350,38 +472,19 @@ export const GiftList = ({
                   )
                 )}
               </LaptopScene>
-              <MobileScene display={{ md: 'none', xs: 'flex' }}>
-                <FormControl fullWidth size="small">
-                  <Select
-                    displayEmpty
-                    value={giftScene}
-                    onOpen={handleSceneOpen}
-                    MenuProps={MenuProps}
-                    open={sceneopen}
-                    IconComponent={SearchIcon}
-                  >
-                    {SCENE_CONFIG_LIST.map((item, index) => (
-                      <MenuItem key={index} value={item.title}>
-                        {item.title === 'すべてのギフト' && 'シーンは何ですか？'}
-                        {item.title !== 'すべてのギフト' && `${item.title}（選択中）`}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </MobileScene>
             </Grid>
             <Grid item xs={12} md={9}>
               <Stack
-                direction={{ md: 'row', xs: 'column' }}
+                display={{ md: 'flex', xs: 'none' }}
+                direction="column"
                 justifyContent="space-between"
               >
                 <Stack direction="row" gap={2}>
                   <Box width={{ md: '140px', xs: '50%' }}>
                     <FilterMultiSelector
-                      label="キーワード"
-                      values={form.keywords.values}
-                      options={form.keywords.options}
-                      setValues={form.keywords.setValues}
+                      values={form.category.values}
+                      options={form.category.options}
+                      setValues={form.category.setValues}
                       handlePriceLaptopClose={handlePriceLaptopClose}
                     />
                   </Box>
@@ -478,7 +581,8 @@ export const GiftList = ({
                 {giftScene === 'すべてのギフト' ? '人気' : '「' + giftScene + '」'}
                 ギフト一覧
               </GiftListTitle>
-              <Box mt={2}>
+              <GiftListTitleMobile>ギフト数（{totalItems}）</GiftListTitleMobile>
+              <Box mt={{ sm: 2, xs: -4 }}>
                 <Grid container spacing={2}>
                   {items.map((item) => (
                     <Grid
@@ -486,21 +590,14 @@ export const GiftList = ({
                       item
                       xs={6}
                       lg={4}
-                      sx={{ paddingTop: '20px !important' }}
+                      sx={{
+                        paddingTop: {
+                          sm: '20px !important',
+                          xs: '58px !important',
+                        },
+                      }}
                     >
-                      <ItemCard
-                        img={item.productImageCloudinary[0].secure_url}
-                        priceText={
-                          !!item.productPrice
-                            ? `${YEN_MARK}${item.productPrice.toLocaleString('en-US')}`
-                            : 'price not set'
-                        }
-                        handleClick={item.onTap}
-                        tags={item.tagsCollection ? item.tagsCollection.items : []}
-                        keyMessage={item.keyMessage}
-                        selectableStatus={item.selectableStatus}
-                        outOfStock={item.stockOk === false} // when undefined (calulating stock is in progress), do not show out of stock ui
-                      />
+                      <ItemCard item={item} />
                     </Grid>
                   ))}
                 </Grid>
@@ -578,46 +675,96 @@ export const GiftList = ({
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
         >
-          <Box sx={style}>
-            <Box
-              component="img"
-              src="/assets/cancel.svg"
-              onClick={handleSceneClose}
-              position="absolute"
-              top={10}
-              right={10}
-            />
-            <SidebarTitle>
-              <Typography variant="h3" align="center">
-                Find by Scene
-              </Typography>
-              <Typography align="center" mt={1}>
-                シーン別に探す
-              </Typography>
-            </SidebarTitle>
-            <LaptopScene mt={3}>
-              {SCENE_CONFIG_LIST.map((scene, index) =>
-                checkSidebar(scene.title) ? (
-                  <Selected key={index}>
-                    <img src={scene.iconColored} />
-                    {scene.title}
-                  </Selected>
-                ) : (
-                  <Button
-                    sx={{ color: '#4A4A4A' }}
-                    key={index}
-                    onClick={() => {
-                      navigate(`/product/choose/${scene.id}`)
-                      handleSceneClose()
-                    }}
-                  >
-                    <img src={scene.iconBlackWhite} />
-                    {scene.title}
-                  </Button>
-                )
+          <MobileSearchModal>
+            <Stack
+              alignItems="start"
+              sx={{
+                height: 80,
+                padding: '25px',
+              }}
+            >
+              <Box
+                component="img"
+                src="/assets/cancel-black.svg"
+                onClick={handleSceneClose}
+                position="absolute"
+                top={25}
+                left={25}
+                sx={{ width: 32 }}
+              />
+            </Stack>
+
+            <Stack
+              px={1.5}
+              pb={1}
+              gap={1.5}
+              sx={{
+                height: 'calc(100vh - 160px)',
+                overflow: 'auto',
+              }}
+            >
+              {mobileStep == 1 ? (
+                <MobileSearchItemLayout title="シーンは？">
+                  <MobileSceneItem giftScene={config} setMobileStep={setMobileStep} />
+                </MobileSearchItemLayout>
+              ) : (
+                <MobileSearchHeader
+                  setMobileStep={() => setMobileStep(1)}
+                  title="シーン"
+                  subTitle={
+                    config?.title === 'すべてのギフト' || !config?.title
+                      ? 'シーンは？'
+                      : config?.title
+                  }
+                  selected={config?.title !== 'すべてのギフト'}
+                />
               )}
-            </LaptopScene>
-          </Box>
+              {mobileStep == 2 ? (
+                <MobilePriceItem
+                  defaultMinPrice={form.minPrice.value}
+                  defaultMaxPrice={form.maxPrice.value}
+                  max={defaultMax}
+                  tempPrice={tempPrice}
+                  setMobileStep={setMobileStep}
+                  setTempPrice={setTempPrice}
+                />
+              ) : (
+                <MobileSearchHeader
+                  setMobileStep={() => setMobileStep(2)}
+                  title={'価格'}
+                  subTitle={tempPriceText}
+                  selected={tempPriceText !== '価格を設定'}
+                />
+              )}
+              {mobileStep == 3 ? (
+                <MobileSearchItemLayout title="どんなギフトをお探しですか？">
+                  <MobileKeywordItem
+                    values={form?.category.values}
+                    options={form?.category.options}
+                    setValues={form?.category.setValues}
+                  />
+                </MobileSearchItemLayout>
+              ) : (
+                <MobileSearchHeader
+                  setMobileStep={() => setMobileStep(3)}
+                  title="商品カテゴリー"
+                  subTitle={
+                    form?.category.values.length > 0
+                      ? form?.category.values.join(', ')
+                      : '商品カテゴリーを設定'
+                  }
+                  selected={form?.category.values.length > 0}
+                />
+              )}
+            </Stack>
+            <ModalFooter
+              leftFunction={clearTempSearch}
+              rightFunction={() => {
+                search()
+                handleSceneClose()
+              }}
+            />
+          </MobileSearchModal>
         </Modal>
       )}
 
